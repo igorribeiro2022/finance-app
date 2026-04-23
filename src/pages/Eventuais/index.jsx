@@ -51,7 +51,10 @@ const schema = yup.object({
 });
 
 function formatCurrency(value) {
-  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(Number(value || 0));
 }
 
 function formatDecimalString(value) {
@@ -76,21 +79,35 @@ export default function Eventuais() {
   const [apiError, setApiError] = useState('');
 
   const [filters, setFilters] = useState({
-    tipo: '', categoria: '', data_inicio: '', data_fim: '',
+    tipo: '',
+    categoria: '',
+    data_inicio: '',
+    data_fim: '',
   });
 
   const [appliedFilters, setAppliedFilters] = useState({
-    tipo: '', categoria: '', data_inicio: '', data_fim: '',
+    tipo: '',
+    categoria: '',
+    data_inicio: '',
+    data_fim: '',
   });
 
   const {
-    register, handleSubmit, reset, watch, setValue,
+    register,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: yupResolver(schema),
     defaultValues: {
-      tipo: 'gasto', descricao: '', categoriaid: '',
-      valor: '', data: '', observacao: '',
+      tipo: 'gasto',
+      descricao: '',
+      categoriaid: '',
+      valor: '',
+      data: '',
+      observacao: '',
     },
   });
 
@@ -112,7 +129,7 @@ export default function Eventuais() {
   );
 
   const categoriasDoFormulario = useMemo(
-    () => watchedTipo === 'ganho' ? categoriasGanho : categoriasGasto,
+    () => (watchedTipo === 'ganho' ? categoriasGanho : categoriasGasto),
     [watchedTipo, categoriasGasto, categoriasGanho]
   );
 
@@ -130,6 +147,7 @@ export default function Eventuais() {
   useEffect(() => {
     const categoriaAtual = watch('categoriaid');
     const idsValidos = categoriaOptionsFormulario.map((c) => c.value);
+
     if (categoriaAtual && !idsValidos.includes(String(categoriaAtual))) {
       setValue('categoriaid', '');
     }
@@ -176,7 +194,7 @@ export default function Eventuais() {
   useEffect(() => {
     loadCategorias();
     load();
-  }, [load, loadCategorias]);
+  }, [loadCategorias, load]);
 
   const closeModal = () => {
     setModalOpen(false);
@@ -192,7 +210,14 @@ export default function Eventuais() {
     }
 
     setEditing(null);
-    reset({ tipo: 'gasto', descricao: '', categoriaid: '', valor: '', data: '', observacao: '' });
+    reset({
+      tipo: 'gasto',
+      descricao: '',
+      categoriaid: '',
+      valor: '',
+      data: '',
+      observacao: '',
+    });
     setModalOpen(true);
   };
 
@@ -270,18 +295,33 @@ export default function Eventuais() {
 
   const resumoFiltros = useMemo(() => {
     const partes = [];
-    if (appliedFilters.tipo) partes.push(`Tipo: ${appliedFilters.tipo === 'ganho' ? 'Ganhos' : 'Gastos'}`);
+
+    if (appliedFilters.tipo) {
+      partes.push(`Tipo: ${appliedFilters.tipo === 'ganho' ? 'Ganhos' : 'Gastos'}`);
+    }
+
     if (appliedFilters.categoria) {
       const cat = getCategoriaById(categorias, appliedFilters.categoria);
       partes.push(`Categoria: ${cat?.nome ?? appliedFilters.categoria}`);
     }
-    if (appliedFilters.data_inicio) partes.push(`De: ${formatDateBR(appliedFilters.data_inicio)}`);
-    if (appliedFilters.data_fim) partes.push(`Até: ${formatDateBR(appliedFilters.data_fim)}`);
+
+    if (appliedFilters.data_inicio) {
+      partes.push(`De: ${formatDateBR(appliedFilters.data_inicio)}`);
+    }
+
+    if (appliedFilters.data_fim) {
+      partes.push(`Até: ${formatDateBR(appliedFilters.data_fim)}`);
+    }
+
     return partes.join(' • ');
   }, [appliedFilters, categorias]);
 
   const handleFilterTipoChange = (value) => {
-    setFilters((prev) => ({ ...prev, tipo: value, categoria: '' }));
+    setFilters((prev) => ({
+      ...prev,
+      tipo: value,
+      categoria: '',
+    }));
   };
 
   const applyFilters = () => {
@@ -290,19 +330,29 @@ export default function Eventuais() {
   };
 
   const clearFilters = () => {
-    const cleared = { tipo: '', categoria: '', data_inicio: '', data_fim: '' };
+    const cleared = {
+      tipo: '',
+      categoria: '',
+      data_inicio: '',
+      data_fim: '',
+    };
+
     setFilters(cleared);
     setAppliedFilters(cleared);
     load(cleared);
   };
 
   const totalGastos = useMemo(
-    () => items.filter((i) => i.tipo === 'gasto').reduce((acc, i) => acc + Number(i.valor || 0), 0),
+    () => items
+      .filter((i) => i.tipo === 'gasto')
+      .reduce((acc, i) => acc + Number(i.valor || 0), 0),
     [items]
   );
 
   const totalGanhos = useMemo(
-    () => items.filter((i) => i.tipo === 'ganho').reduce((acc, i) => acc + Number(i.valor || 0), 0),
+    () => items
+      .filter((i) => i.tipo === 'ganho')
+      .reduce((acc, i) => acc + Number(i.valor || 0), 0),
     [items]
   );
 
@@ -310,6 +360,7 @@ export default function Eventuais() {
     if (item.categoria && typeof item.categoria === 'string' && isNaN(Number(item.categoria))) {
       return item.categoria;
     }
+
     const categoriaId = item.categoriaid ?? item.categoria_id ?? item.categoria;
     const found = getCategoriaById(categorias, categoriaId);
     return found?.nome ?? '-';
@@ -321,8 +372,11 @@ export default function Eventuais() {
         <HeaderRow>
           <div>
             <PageTitle>Eventuais</PageTitle>
-            <PageSubtitle>Ganhos e gastos não recorrentes com filtros por período e categoria.</PageSubtitle>
+            <PageSubtitle>
+              Ganhos e gastos não recorrentes com filtros por período e categoria.
+            </PageSubtitle>
           </div>
+
           <TopActions>
             <AddButton onClick={openCreate}>+ Novo lançamento</AddButton>
           </TopActions>
@@ -331,7 +385,10 @@ export default function Eventuais() {
         <FiltersBar>
           <FilterGroup>
             <FilterLabel>Tipo</FilterLabel>
-            <FilterSelect value={filters.tipo} onChange={(e) => handleFilterTipoChange(e.target.value)}>
+            <FilterSelect
+              value={filters.tipo}
+              onChange={(e) => handleFilterTipoChange(e.target.value)}
+            >
               <option value="">Todos</option>
               <option value="gasto">Gastos</option>
               <option value="ganho">Ganhos</option>
@@ -342,11 +399,16 @@ export default function Eventuais() {
             <FilterLabel>Categoria</FilterLabel>
             <FilterSelect
               value={filters.categoria}
-              onChange={(e) => setFilters((prev) => ({ ...prev, categoria: e.target.value }))}
+              onChange={(e) => setFilters((prev) => ({
+                ...prev,
+                categoria: e.target.value,
+              }))}
             >
               <option value="">Todas</option>
               {categoriasDoFiltro.map((c) => (
-                <option key={c.value} value={c.value}>{c.label}</option>
+                <option key={c.value} value={c.value}>
+                  {c.label}
+                </option>
               ))}
             </FilterSelect>
           </FilterGroup>
@@ -356,7 +418,10 @@ export default function Eventuais() {
             <FilterInput
               type="date"
               value={filters.data_inicio}
-              onChange={(e) => setFilters((prev) => ({ ...prev, data_inicio: e.target.value }))}
+              onChange={(e) => setFilters((prev) => ({
+                ...prev,
+                data_inicio: e.target.value,
+              }))}
             />
           </FilterGroup>
 
@@ -365,13 +430,20 @@ export default function Eventuais() {
             <FilterInput
               type="date"
               value={filters.data_fim}
-              onChange={(e) => setFilters((prev) => ({ ...prev, data_fim: e.target.value }))}
+              onChange={(e) => setFilters((prev) => ({
+                ...prev,
+                data_fim: e.target.value,
+              }))}
             />
           </FilterGroup>
 
           <TopActions>
-            <CancelBtn type="button" onClick={clearFilters}>Limpar</CancelBtn>
-            <SubmitButton type="button" onClick={applyFilters}>Filtrar</SubmitButton>
+            <CancelBtn type="button" onClick={clearFilters}>
+              Limpar
+            </CancelBtn>
+            <SubmitButton type="button" onClick={applyFilters}>
+              Filtrar
+            </SubmitButton>
           </TopActions>
         </FiltersBar>
 
@@ -393,18 +465,25 @@ export default function Eventuais() {
         <SummaryGrid>
           <SummaryCard>
             <SummaryLabel>Total de gastos</SummaryLabel>
-            <SummaryValue $type="expense">{formatCurrency(totalGastos)}</SummaryValue>
+            <SummaryValue $type="expense">
+              {formatCurrency(totalGastos)}
+            </SummaryValue>
           </SummaryCard>
+
           <SummaryCard>
             <SummaryLabel>Total de ganhos</SummaryLabel>
-            <SummaryValue $type="income">{formatCurrency(totalGanhos)}</SummaryValue>
+            <SummaryValue $type="income">
+              {formatCurrency(totalGanhos)}
+            </SummaryValue>
           </SummaryCard>
+
           <SummaryCard>
             <SummaryLabel>Saldo eventual</SummaryLabel>
             <SummaryValue $type={totalGanhos - totalGastos >= 0 ? 'income' : 'expense'}>
               {formatCurrency(totalGanhos - totalGastos)}
             </SummaryValue>
           </SummaryCard>
+
           <SummaryCard>
             <SummaryLabel>Lançamentos</SummaryLabel>
             <SummaryValue>{items.length}</SummaryValue>
@@ -428,7 +507,11 @@ export default function Eventuais() {
 
         <Tbody>
           {loading && [...Array(4)].map((_, i) => (
-            <Tr key={i}><Td colSpan={6}><SkeletonRow /></Td></Tr>
+            <Tr key={i}>
+              <Td colSpan={6}>
+                <SkeletonRow />
+              </Td>
+            </Tr>
           ))}
 
           {!loading && items.length === 0 && (
@@ -459,19 +542,30 @@ export default function Eventuais() {
                   </small>
                 )}
               </Td>
+
               <Td>
                 <TypeBadge $type={item.tipo}>
                   {item.tipo === 'ganho' ? 'Ganho' : 'Gasto'}
                 </TypeBadge>
               </Td>
-              <Td><Badge>{getCategoriaLabel(item)}</Badge></Td>
+
+              <Td>
+                <Badge>{getCategoriaLabel(item)}</Badge>
+              </Td>
+
               <Td>{formatDateBR(item.data)}</Td>
+
               <Td $income={item.tipo === 'ganho'} $expense={item.tipo === 'gasto'}>
                 {formatCurrency(item.valor)}
               </Td>
+
               <Td>
-                <ActionBtn onClick={() => openEdit(item)} title="Editar">✎</ActionBtn>
-                <ActionBtn $danger onClick={() => setDeleteTarget(item)} title="Excluir">✕</ActionBtn>
+                <ActionBtn onClick={() => openEdit(item)} title="Editar">
+                  ✎
+                </ActionBtn>
+                <ActionBtn $danger onClick={() => setDeleteTarget(item)} title="Excluir">
+                  ✕
+                </ActionBtn>
               </Td>
             </Tr>
           ))}
@@ -488,6 +582,7 @@ export default function Eventuais() {
               exit={{ opacity: 0 }}
               onClick={closeModal}
             />
+
             <ModalBox
               as={motion.div}
               initial={{ opacity: 0, y: 24, scale: 0.97 }}
@@ -528,7 +623,9 @@ export default function Eventuais() {
                           <Select $hasError={!!errors.categoriaid} {...register('categoriaid')}>
                             <option value="">Selecione...</option>
                             {categoriaOptionsFormulario.map((c) => (
-                              <option key={c.value} value={c.value}>{c.label}</option>
+                              <option key={c.value} value={c.value}>
+                                {c.label}
+                              </option>
                             ))}
                           </Select>
                           {errors.categoriaid && <ErrorMessage>{errors.categoriaid.message}</ErrorMessage>}
@@ -539,7 +636,11 @@ export default function Eventuais() {
                     <FormGroup $full>
                       <Label>Descrição</Label>
                       <Input
-                        placeholder={watchedTipo === 'ganho' ? 'Ex: Freelance extra...' : 'Ex: Consulta, transporte, presente...'}
+                        placeholder={
+                          watchedTipo === 'ganho'
+                            ? 'Ex: Freelance extra...'
+                            : 'Ex: Consulta, transporte, presente...'
+                        }
                         $hasError={!!errors.descricao}
                         {...register('descricao')}
                       />
@@ -571,14 +672,19 @@ export default function Eventuais() {
 
                     <FormGroup $full>
                       <Label>Observação (opcional)</Label>
-                      <Textarea placeholder="Anotações livres..." {...register('observacao')} />
+                      <Textarea
+                        placeholder="Anotações livres..."
+                        {...register('observacao')}
+                      />
                     </FormGroup>
                   </FormGrid>
 
                   {apiError && <ErrorMessage $banner>{apiError}</ErrorMessage>}
 
                   <FormActions>
-                    <CancelBtn type="button" onClick={closeModal}>Cancelar</CancelBtn>
+                    <CancelBtn type="button" onClick={closeModal}>
+                      Cancelar
+                    </CancelBtn>
                     <SubmitButton type="submit" disabled={isSubmitting}>
                       {isSubmitting ? <Spinner /> : editing ? 'Salvar alterações' : 'Criar lançamento'}
                     </SubmitButton>
@@ -600,6 +706,7 @@ export default function Eventuais() {
               exit={{ opacity: 0 }}
               onClick={() => setDeleteTarget(null)}
             />
+
             <DeleteConfirm
               as={motion.div}
               initial={{ opacity: 0, scale: 0.95 }}
@@ -610,9 +717,14 @@ export default function Eventuais() {
                 Excluir <strong>{deleteTarget?.descricao}</strong>?<br />
                 <small>Essa ação não pode ser desfeita.</small>
               </ConfirmText>
+
               <ConfirmActions>
-                <CancelBtn onClick={() => setDeleteTarget(null)}>Cancelar</CancelBtn>
-                <DangerBtn onClick={confirmDelete}>Excluir</DangerBtn>
+                <CancelBtn onClick={() => setDeleteTarget(null)}>
+                  Cancelar
+                </CancelBtn>
+                <DangerBtn onClick={confirmDelete}>
+                  Excluir
+                </DangerBtn>
               </ConfirmActions>
             </DeleteConfirm>
           </Modal>
