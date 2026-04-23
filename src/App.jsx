@@ -11,12 +11,12 @@ function App() {
   const theme = themeMode === 'dark' ? darkTheme : lightTheme;
 
   return (
-    <ThemeProvider theme={theme}>
-      <GlobalStyles />
-      <BrowserRouter>
+    <BrowserRouter>
+      <ThemeProvider theme={theme}>
+        <GlobalStyles />
         <AppRoutes />
-      </BrowserRouter>
-    </ThemeProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

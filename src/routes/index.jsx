@@ -16,13 +16,6 @@ import Categorias from '../pages/Categorias';
 import Login from '../pages/Login';
 import Cadastro from '../pages/Cadastro';
 
-function PrivateRoute() {
-  const auth = useSelector((state) => state.auth || {});
-  const isAuthenticated =
-    !!auth.isAuthenticated || !!auth.accessToken || !!auth.user;
-
-  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
-}
 
 function PublicOnlyRoute({ children }) {
   const auth = useSelector((state) => state.auth || {});
@@ -32,15 +25,21 @@ function PublicOnlyRoute({ children }) {
   return isAuthenticated ? <Navigate to="/" replace /> : children;
 }
 
+
 function PrivateLayout() {
+  const auth = useSelector((state) => state.auth || {});
+  const isAuthenticated =
+    !!auth.isAuthenticated || !!auth.accessToken || !!auth.user;
+
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+
   return (
-    <PrivateRoute>
-      <Layout>
-        <Outlet />
-      </Layout>
-    </PrivateRoute>
+    <Layout>
+      <Outlet />
+    </Layout>
   );
 }
+
 
 function AppRoutes() {
   return (
@@ -79,5 +78,6 @@ function AppRoutes() {
     </Routes>
   );
 }
+
 
 export default AppRoutes;
