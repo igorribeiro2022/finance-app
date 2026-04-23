@@ -96,8 +96,6 @@ export default function Eventuais() {
 
   const watchedTipo = watch('tipo');
 
-  // ── categorias filtradas por tipo ──────────────────────────────────────────
-
   const categoriasGasto = useMemo(
     () => getCategoriasByTipo(categorias, 'gasto'),
     [categorias]
@@ -129,8 +127,6 @@ export default function Eventuais() {
     return mapCategoriasToOptions(categoriasTodasAtivas);
   }, [filters.tipo, categoriasGasto, categoriasGanho, categoriasTodasAtivas]);
 
-  // ── reset categoria ao mudar tipo no formulário ────────────────────────────
-
   useEffect(() => {
     const categoriaAtual = watch('categoriaid');
     const idsValidos = categoriaOptionsFormulario.map((c) => c.value);
@@ -138,8 +134,6 @@ export default function Eventuais() {
       setValue('categoriaid', '');
     }
   }, [watchedTipo, categoriaOptionsFormulario, setValue, watch]);
-
-  // ── carregamento inicial ───────────────────────────────────────────────────
 
   const loadCategorias = useCallback(async () => {
     try {
@@ -155,16 +149,18 @@ export default function Eventuais() {
     }
   }, []);
 
-  const load = useCallback(async (customFilters = filters) => {
+  const load = useCallback(async (customFilters) => {
+    const activeFilters = customFilters ?? appliedFilters;
+
     try {
       setLoading(true);
       setApiError('');
 
       const params = {};
-      if (customFilters.tipo) params.tipo = customFilters.tipo;
-      if (customFilters.categoria) params.categoria = customFilters.categoria;
-      if (customFilters.data_inicio) params.datainicio = customFilters.data_inicio;
-      if (customFilters.data_fim) params.datafim = customFilters.data_fim;
+      if (activeFilters.tipo) params.tipo = activeFilters.tipo;
+      if (activeFilters.categoria) params.categoria = activeFilters.categoria;
+      if (activeFilters.data_inicio) params.datainicio = activeFilters.data_inicio;
+      if (activeFilters.data_fim) params.datafim = activeFilters.data_fim;
 
       const res = await getEventuais(params);
       const data = Array.isArray(res.data) ? res.data : (res.data?.results ?? []);
@@ -175,14 +171,12 @@ export default function Eventuais() {
     } finally {
       setLoading(false);
     }
-  }, [filters]);
+  }, [appliedFilters]);
 
   useEffect(() => {
     loadCategorias();
     load();
   }, [load, loadCategorias]);
-
-  // ── modal ─────────────────────────────────────────────────────────────────
 
   const closeModal = () => {
     setModalOpen(false);
@@ -244,7 +238,7 @@ export default function Eventuais() {
       }
 
       closeModal();
-      await load();
+      await load(appliedFilters);
     } catch (err) {
       console.error('Erro ao salvar eventual:', err);
       const detail = err.response?.data;
@@ -262,14 +256,12 @@ export default function Eventuais() {
     try {
       await deleteEventual(deleteTarget.id);
       setDeleteTarget(null);
-      await load();
+      await load(appliedFilters);
     } catch (err) {
       console.error('Erro ao excluir eventual:', err);
       setApiError('Erro ao excluir.');
     }
   };
-
-  // ── filtros ───────────────────────────────────────────────────────────────
 
   const filtrosAtivos = useMemo(
     () => Object.values(appliedFilters).some(Boolean),
@@ -304,8 +296,6 @@ export default function Eventuais() {
     load(cleared);
   };
 
-  // ── resumo financeiro ─────────────────────────────────────────────────────
-
   const totalGastos = useMemo(
     () => items.filter((i) => i.tipo === 'gasto').reduce((acc, i) => acc + Number(i.valor || 0), 0),
     [items]
@@ -324,8 +314,6 @@ export default function Eventuais() {
     const found = getCategoriaById(categorias, categoriaId);
     return found?.nome ?? '-';
   };
-
-  // ── render ────────────────────────────────────────────────────────────────
 
   return (
     <>
