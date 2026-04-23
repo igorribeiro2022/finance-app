@@ -10,16 +10,13 @@ import {
   BrandMark, Logo, Title, Subtitle,
   Form, FormGroup, Label, Input,
   ErrorMessage, SubmitButton, FooterText,
-  Spinner, SuccessMessage,
+  Spinner, SuccessMessage, PasswordWrapper, TogglePassword,
 } from './styles';
 
 const schema = yup.object({
   nome: yup.string().min(2, 'Nome muito curto').required('Nome obrigatório'),
   email: yup.string().email('E-mail inválido').required('E-mail obrigatório'),
-  password: yup
-    .string()
-    .min(8, 'Mínimo 8 caracteres')
-    .required('Senha obrigatória'),
+  password: yup.string().min(8, 'Mínimo 8 caracteres').required('Senha obrigatória'),
   password2: yup
     .string()
     .oneOf([yup.ref('password')], 'As senhas não coincidem')
@@ -30,6 +27,8 @@ export default function Cadastro() {
   const navigate = useNavigate();
   const [apiError, setApiError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPassword2, setShowPassword2] = useState(false);
 
   const {
     register,
@@ -50,6 +49,21 @@ export default function Cadastro() {
       setApiError(msg);
     }
   };
+
+  const EyeIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+      <circle cx="12" cy="12" r="3"/>
+    </svg>
+  );
+
+  const EyeOffIcon = () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
+      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
+      <line x1="1" y1="1" x2="23" y2="23"/>
+    </svg>
+  );
 
   return (
     <Container>
@@ -107,23 +121,41 @@ export default function Cadastro() {
 
             <FormGroup>
               <Label>Senha</Label>
-              <Input
-                type="password"
-                placeholder="Mínimo 8 caracteres"
-                $hasError={!!errors.password}
-                {...register('password')}
-              />
+              <PasswordWrapper>
+                <Input
+                  type={showPassword ? 'text' : 'password'}
+                  placeholder="Mínimo 8 caracteres"
+                  $hasError={!!errors.password}
+                  {...register('password')}
+                />
+                <TogglePassword
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                </TogglePassword>
+              </PasswordWrapper>
               {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
             </FormGroup>
 
             <FormGroup>
               <Label>Confirmar senha</Label>
-              <Input
-                type="password"
-                placeholder="••••••••"
-                $hasError={!!errors.password2}
-                {...register('password2')}
-              />
+              <PasswordWrapper>
+                <Input
+                  type={showPassword2 ? 'text' : 'password'}
+                  placeholder="••••••••"
+                  $hasError={!!errors.password2}
+                  {...register('password2')}
+                />
+                <TogglePassword
+                  type="button"
+                  onClick={() => setShowPassword2((v) => !v)}
+                  aria-label={showPassword2 ? 'Ocultar senha' : 'Mostrar senha'}
+                >
+                  {showPassword2 ? <EyeOffIcon /> : <EyeIcon />}
+                </TogglePassword>
+              </PasswordWrapper>
               {errors.password2 && <ErrorMessage>{errors.password2.message}</ErrorMessage>}
             </FormGroup>
 

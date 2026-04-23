@@ -172,3 +172,31 @@ export const FooterText = styled.p`
     }
   }
 `;
+
+export const PasswordWrapper = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  ${Input} {
+    padding-right: 2.75rem;
+    width: 100%;
+  }
+`;
+
+export const TogglePassword = styled.button`
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: ${({ theme }) => theme.colors?.textMuted ?? '#7a7974'};
+  display: flex;
+  align-items: center;
+  padding: 0;
+  line-height: 1;
+
+  &:hover {
+    color: ${({ theme }) => theme.colors?.text ?? '#28251d'};
+  }
+`;

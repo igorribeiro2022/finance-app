@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
@@ -141,7 +141,7 @@ export default function Eventuais() {
 
   // ── carregamento inicial ───────────────────────────────────────────────────
 
-  const loadCategorias = async () => {
+  const loadCategorias = useCallback(async () => {
     try {
       setLoadingCategorias(true);
       const res = await getCategorias();
@@ -153,9 +153,9 @@ export default function Eventuais() {
     } finally {
       setLoadingCategorias(false);
     }
-  };
+  }, []);
 
-  const load = async (customFilters = filters) => {
+  const load = useCallback(async (customFilters = filters) => {
     try {
       setLoading(true);
       setApiError('');
@@ -175,12 +175,12 @@ export default function Eventuais() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
 
   useEffect(() => {
     loadCategorias();
     load();
-  }, []);
+  }, [load, loadCategorias]);
 
   // ── modal ─────────────────────────────────────────────────────────────────
 

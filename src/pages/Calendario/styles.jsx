@@ -146,26 +146,6 @@ export const EventList = styled.div`
   align-items: center;
 `;
 
-export const EventDot = styled.span`
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  flex-shrink: 0;
-  background: ${({ theme, $color }) =>
-    $color === 'income'
-      ? theme.colors.success
-      : $color === 'expense'
-        ? theme.colors.error
-        : theme.colors.textFaint};
-`;
-
-export const EventDesc = styled.span`
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.text};
-  display: block;
-`;
-
 export const EventValue = styled.span`
   font-size: 0.875rem;
   font-weight: 700;
@@ -207,19 +187,37 @@ export const ErrorBanner = styled.div`
   color: ${({ theme, $info }) => $info ? theme.colors.blue : theme.colors.error};
 `;
 
-export const EventItem = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 0.875rem 1rem;
-  margin-bottom: 0.5rem;
-  border-radius: ${({ theme }) => theme.radius.lg};
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1.5px solid ${({ theme, $color }) =>
-    $color === 'income'
-      ? 'rgba(40,191,17,0.2)'
-      : $color === 'expense'
-        ? 'rgba(217,7,7,0.15)'
-        : theme.colors.border};
+export const EventChip = styled.div`
+  display: block;
+  width: 100%;
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: pointer;
+  line-height: 1.4;
+
+  ${({ $color }) =>
+    $color === 'income' && `
+      background: #437a22;
+      color: #fff;
+    `}
+
+  ${({ $color }) =>
+    $color === 'expense' && `
+      background: #a12c7b;
+      color: #fff;
+    `}
+
+  ${({ $overflow }) =>
+    $overflow && `
+      background: transparent;
+      color: inherit;
+      opacity: 0.5;
+      font-size: 0.65rem;
+      padding-left: 0.2rem;
+    `}
 `;

@@ -5,7 +5,7 @@ import {
   PageHeader, PageTitle, PageSubtitle, HeaderRow,
   NavBar, NavButton, MonthLabel,
   CalendarGrid, DayCell, DayNumber, DayEmpty,
-  EventList, EventItem, EventDot, EventDesc, EventValue,
+  EventList, EventChip, EventValue,
   EmptyDay, SkeletonCell, ErrorBanner,
   Legend, LegendItem, LegendDot,
 } from './styles';
@@ -51,6 +51,8 @@ function getTipoLabel(tipo) {
   return labels[tipo] ?? tipo;
 }
 
+const MAX_CHIPS_VISIBLE = 3;
+
 export default function Calendario() {
   const today = new Date();
   const [mes, setMes] = useState(today.getMonth() + 1);
@@ -74,7 +76,6 @@ export default function Calendario() {
         typeof detail === 'object' && detail !== null
           ? Object.values(detail).flat().join(' ')
           : 'Erro ao carregar o calendário. Tente novamente.';
-
       setError(msg || 'Erro ao carregar o calendário. Tente novamente.');
     } finally {
       setLoading(false);
@@ -86,21 +87,13 @@ export default function Calendario() {
   }, [load]);
 
   const prevMonth = () => {
-    if (mes === 1) {
-      setMes(12);
-      setAno((a) => a - 1);
-    } else {
-      setMes((m) => m - 1);
-    }
+    if (mes === 1) { setMes(12); setAno((a) => a - 1); }
+    else setMes((m) => m - 1);
   };
 
   const nextMonth = () => {
-    if (mes === 12) {
-      setMes(1);
-      setAno((a) => a + 1);
-    } else {
-      setMes((m) => m + 1);
-    }
+    if (mes === 12) { setMes(1); setAno((a) => a + 1); }
+    else setMes((m) => m + 1);
   };
 
   const firstDay = new Date(ano, mes - 1, 1).getDay();
@@ -164,9 +157,8 @@ export default function Calendario() {
               const eventos = eventosMap[key] || [];
               const isToday = key === todayStr;
               const isSelected = selectedDay === day;
-
-              const hasIncome = eventos.some((e) => getTipoColor(e.tipo) === 'income');
-              const hasExpense = eventos.some((e) => getTipoColor(e.tipo) === 'expense');
+              const visible = eventos.slice(0, MAX_CHIPS_VISIBLE);
+              const overflow = eventos.length - MAX_CHIPS_VISIBLE;
 
               return (
                 <DayCell
@@ -176,19 +168,26 @@ export default function Calendario() {
                   $hasEvents={eventos.length > 0}
                   onClick={() => setSelectedDay(isSelected ? null : day)}
                   as={motion.div}
-                  whileHover={{ scale: 1.03 }}
+                  whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
                 >
                   <DayNumber $today={isToday}>{day}</DayNumber>
 
                   {eventos.length > 0 && (
                     <EventList>
-                      {hasIncome && <EventDot $color="income" />}
-                      {hasExpense && <EventDot $color="expense" />}
-                      {eventos.length > 2 && (
-                        <span style={{ fontSize: '0.65rem', opacity: 0.6 }}>
-                          +{eventos.length}
-                        </span>
+                      {visible.map((evento, idx) => (
+                        <EventChip
+                          key={idx}
+                          $color={getTipoColor(evento.tipo)}
+                          title={`${evento.descricao} — ${formatCurrency(evento.valor)}`}
+                        >
+                          {evento.descricao}
+                        </EventChip>
+                      ))}
+                      {overflow > 0 && (
+                        <EventChip $overflow>
+                          +{overflow} mais
+                        </EventChip>
                       )}
                     </EventList>
                   )}
@@ -216,26 +215,40 @@ export default function Calendario() {
               <ErrorBanner $info>Nenhum lançamento para este dia.</ErrorBanner>
             ) : (
               selectedEvents.map((evento, i) => (
-                <EventItem
+                <motion.div
                   key={i}
-                  $color={getTipoColor(evento.tipo)}
-                  as={motion.div}
                   initial={{ opacity: 0, x: -8 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: i * 0.05 }}
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    padding: '0.75rem 1rem',
+                    marginBottom: '0.5rem',
+                    borderRadius: '0.5rem',
+                    background: getTipoColor(evento.tipo) === 'income'
+                      ? 'rgba(67, 122, 34, 0.08)'
+                      : 'rgba(161, 44, 123, 0.08)',
+                    borderLeft: `3px solid ${getTipoColor(evento.tipo) === 'income' ? '#437a22' : '#a12c7b'}`,
+                  }}
                 >
                   <div>
-                    <EventDesc>{evento.descricao}</EventDesc>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{evento.descricao}</div>
                     <small style={{ opacity: 0.6, fontSize: '0.75rem' }}>
                       {getTipoLabel(evento.tipo)}
                       {evento.categoria ? ` • ${evento.categoria}` : ''}
                       {evento.proximidade ? ` • ${evento.proximidade}` : ''}
                     </small>
                   </div>
-                  <EventValue $color={getTipoColor(evento.tipo)}>
+                  <div style={{
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    color: getTipoColor(evento.tipo) === 'income' ? '#437a22' : '#a12c7b',
+                  }}>
                     {formatCurrency(evento.valor)}
-                  </EventValue>
-                </EventItem>
+                  </div>
+                </motion.div>
               ))
             )}
           </motion.div>
