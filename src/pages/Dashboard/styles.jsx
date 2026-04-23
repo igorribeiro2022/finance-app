@@ -205,3 +205,9 @@ export const ErrorBanner = styled.div`
   font-weight: 500;
   margin-bottom: 1.5rem;
 `;
+
+export const KpiDelta = styled.span`
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: ${({ $positive, theme }) => $positive ? theme.colors.success : theme.colors.error};
+`;
