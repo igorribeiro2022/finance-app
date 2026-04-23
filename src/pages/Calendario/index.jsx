@@ -15,7 +15,7 @@ import {
   EmptyState, SkeletonCell, ErrorBanner,
   Legend, LegendItem, LegendDot,
   PageTitle, PageSubtitle,
-} from './styles';
+} from './styles.jsx';
 
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
                'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
