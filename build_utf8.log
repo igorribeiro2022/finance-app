@@ -1,0 +1,36 @@
+﻿yarn run v1.22.22
+$ react-scripts build
+Creating an optimized production build...
+Compiled with warnings.
+
+[eslint] 
+src\pages\Calendario\index.jsx
+  Line 17:14:  'PageSubtitle' is defined but never used                                                                           no-unused-vars
+  Line 97:9:   'currentMap' is assigned a value but never used                                                                    no-unused-vars
+  Line 194:6:  React Hook useMemo has a missing dependency: 'getEventsForDate'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+src\pages\Dashboard\index.jsx
+  Line 11:50:  'KpiDelta' is defined but never used             no-unused-vars
+  Line 130:9:  'saldoColor' is assigned a value but never used  no-unused-vars
+
+Search for the keywords to learn more about each warning.
+To ignore, add // eslint-disable-next-line to the line before.
+
+File sizes after gzip:
+
+  300.69 kB  build\static\js\main.4592eec5.js
+
+The project was built assuming it is hosted at /.
+You can control this with the homepage field in your package.json.
+
+The build folder is ready to be deployed.
+You may serve it with a static server:
+
+  yarn global add serve
+  serve -s build
+
+Find out more about deployment here:
+
+  https://cra.link/deployment
+
+Done in 13.09s.

@@ -47,16 +47,16 @@ export const lightTheme = {
 export const darkTheme = {
   colors: {
     // Paleta principal (invertida)
-    bg:             '#1a110c',
-    surface:        '#221610',
-    surface2:       '#2a1d15',
+    bg:             '#0a0705',
+    surface:        '#110b08',
+    surface2:       '#0f0a06',
     surfaceOffset:  '#33221a',
     border:         'rgba(242, 242, 235, 0.10)',
     divider:        'rgba(242, 242, 235, 0.06)',
 
     // Texto
     text:           '#F2F2EB',
-    textMuted:      '#D9B29C',
+    textMuted:      '#ebd6ca',
     textFaint:      '#A6806A',
     textInverse:    '#261C14',
 
