@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import api from '../../services/api';
 import {
   getBanks,
   getConsents,
@@ -99,25 +100,6 @@ function getAccountTypeLabel(tipo) {
   return ACCOUNT_TYPE_LABEL[tipo] || tipo || 'Conta';
 }
 
-function getConsentRedirectUrl(payload) {
-  if (!payload || typeof payload !== 'object') return '';
-
-  return (
-    payload.redirect_url
-    || payload.authorization_url
-    || payload.redirectUrl
-    || payload.authorizationUrl
-    || payload.url
-    || payload.link
-    || payload.consent_url
-    || payload.redirect?.url
-    || payload.authorization?.url
-    || payload.data?.redirect_url
-    || payload.data?.authorization_url
-    || ''
-  );
-}
-
 function firstDefinedValue(...values) {
   return values.find((value) => value !== undefined && value !== null && value !== '');
 }
@@ -127,18 +109,29 @@ function normalizeId(value) {
   return resolved === undefined ? '' : String(resolved);
 }
 
+function resolveAssetUrl(value) {
+  const rawValue = String(firstDefinedValue(value) || '').trim();
+
+  if (!rawValue || rawValue === 'null' || rawValue === 'undefined') return '';
+  if (rawValue.startsWith('data:') || rawValue.startsWith('blob:')) return rawValue;
+  if (rawValue.startsWith('//')) return `https:${rawValue}`;
+  if (/^https?:\/\//i.test(rawValue)) return rawValue;
+
+  try {
+    return new URL(rawValue, api.defaults.baseURL || window.location.origin).toString();
+  } catch {
+    return rawValue;
+  }
+}
+
+function getDisplayInitial(name) {
+  return String(name || '?').trim().charAt(0).toUpperCase() || '?';
+}
+
 function getCollectionFromPayload(payload, keys = []) {
   const candidateKeys = [
-    'results',
-    'data',
-    'items',
-    'list',
-    'banks',
-    'institutions',
-    'consents',
-    'accounts',
-    'transactions',
-    ...keys,
+    'results', 'data', 'items', 'list', 'banks', 'institutions',
+    'consents', 'accounts', 'transactions', ...keys,
   ];
 
   const queue = [payload];
@@ -146,41 +139,32 @@ function getCollectionFromPayload(payload, keys = []) {
 
   while (queue.length > 0) {
     const current = queue.shift();
-
     if (Array.isArray(current)) return current;
     if (!current || typeof current !== 'object' || visited.has(current)) continue;
 
     visited.add(current);
 
     for (const key of candidateKeys) {
-      if (Array.isArray(current[key])) {
-        return current[key];
-      }
+      if (Array.isArray(current[key])) return current[key];
     }
 
     for (const key of candidateKeys) {
       const nextValue = current[key];
-      if (nextValue && typeof nextValue === 'object') {
-        queue.push(nextValue);
-      }
+      if (nextValue && typeof nextValue === 'object') queue.push(nextValue);
     }
 
     const objectValues = Object.values(current).filter(
       (value) => value && typeof value === 'object' && !Array.isArray(value)
     );
-    const looksLikeEntityMap = objectValues.length > 0 && objectValues.every((value) => {
-      return (
-        value.id !== undefined
-        || value.name !== undefined
-        || value.nome !== undefined
-        || value.institution_id !== undefined
-        || value.bank_id !== undefined
-      );
-    });
+    const looksLikeEntityMap = objectValues.length > 0 && objectValues.every((value) => (
+      value.id !== undefined
+      || value.name !== undefined
+      || value.nome !== undefined
+      || value.institution_id !== undefined
+      || value.bank_id !== undefined
+    ));
 
-    if (looksLikeEntityMap) {
-      return objectValues;
-    }
+    if (looksLikeEntityMap) return objectValues;
   }
 
   return [];
@@ -190,21 +174,11 @@ function normalizeInstitution(rawInstitution) {
   const institution = rawInstitution && typeof rawInstitution === 'object' ? rawInstitution : {};
   const id = normalizeId(
     firstDefinedValue(
-      institution.id,
-      institution.institution_id,
-      institution.institutionId,
-      institution.bank_id,
-      institution.bankId,
-      institution.provider_id,
-      institution.providerId,
-      institution.connector_id,
-      institution.connectorId,
-      institution.organization_id,
-      institution.organizationId,
-      institution.codigo,
-      institution.code,
-      institution.ispb,
-      institution.uuid
+      institution.id, institution.institution_id, institution.institutionId,
+      institution.bank_id, institution.bankId, institution.provider_id,
+      institution.providerId, institution.connector_id, institution.connectorId,
+      institution.organization_id, institution.organizationId,
+      institution.codigo, institution.code, institution.ispb, institution.uuid
     )
   );
 
@@ -213,29 +187,16 @@ function normalizeInstitution(rawInstitution) {
     id,
     institution_id: normalizeId(firstDefinedValue(institution.institution_id, id)),
     nome: firstDefinedValue(
-      institution.nome,
-      institution.name,
-      institution.institution_name,
-      institution.institutionName,
-      institution.trade_name,
-      institution.tradeName,
-      institution.display_name,
-      institution.displayName,
-      institution.razao_social,
-      institution.brand_name,
-      institution.brandName
+      institution.nome, institution.name, institution.institution_name,
+      institution.institutionName, institution.trade_name, institution.tradeName,
+      institution.display_name, institution.displayName, institution.razao_social,
+      institution.brand_name, institution.brandName
     ) || '',
-    logo_url: firstDefinedValue(
-      institution.logo_url,
-      institution.logoUrl,
-      institution.logo,
-      institution.image_url,
-      institution.imageUrl,
-      institution.icon_url,
-      institution.iconUrl,
-      institution.brand_logo_url,
-      institution.brandLogoUrl
-    ) || '',
+    logo_url: resolveAssetUrl(firstDefinedValue(
+      institution.logo_url, institution.logoUrl, institution.logo,
+      institution.image_url, institution.imageUrl, institution.icon_url,
+      institution.iconUrl, institution.brand_logo_url, institution.brandLogoUrl
+    ) || ''),
   };
 }
 
@@ -244,23 +205,10 @@ function normalizeBank(rawBank) {
   const nestedInstitution = normalizeInstitution(bank.institution);
   const id = normalizeId(
     firstDefinedValue(
-      bank.id,
-      bank.institution_id,
-      bank.institutionId,
-      bank.bank_id,
-      bank.bankId,
-      bank.provider_id,
-      bank.providerId,
-      bank.connector_id,
-      bank.connectorId,
-      bank.organization_id,
-      bank.organizationId,
-      bank.codigo,
-      bank.code,
-      bank.ispb,
-      bank.uuid,
-      nestedInstitution.id,
-      nestedInstitution.institution_id
+      bank.id, bank.institution_id, bank.institutionId, bank.bank_id, bank.bankId,
+      bank.provider_id, bank.providerId, bank.connector_id, bank.connectorId,
+      bank.organization_id, bank.organizationId, bank.codigo, bank.code,
+      bank.ispb, bank.uuid, nestedInstitution.id, nestedInstitution.institution_id
     )
   );
 
@@ -269,31 +217,15 @@ function normalizeBank(rawBank) {
     id,
     institution_id: normalizeId(firstDefinedValue(bank.institution_id, id)),
     nome: firstDefinedValue(
-      bank.nome,
-      bank.name,
-      bank.institution_name,
-      bank.institutionName,
-      bank.trade_name,
-      bank.tradeName,
-      bank.display_name,
-      bank.displayName,
-      bank.razao_social,
-      bank.brand_name,
-      bank.brandName,
-      nestedInstitution.nome
+      bank.nome, bank.name, bank.institution_name, bank.institutionName,
+      bank.trade_name, bank.tradeName, bank.display_name, bank.displayName,
+      bank.razao_social, bank.brand_name, bank.brandName, nestedInstitution.nome
     ) || 'Instituição financeira',
-    logo_url: firstDefinedValue(
-      bank.logo_url,
-      bank.logoUrl,
-      bank.logo,
-      bank.image_url,
-      bank.imageUrl,
-      bank.icon_url,
-      bank.iconUrl,
-      bank.brand_logo_url,
-      bank.brandLogoUrl,
+    logo_url: resolveAssetUrl(firstDefinedValue(
+      bank.logo_url, bank.logoUrl, bank.logo, bank.image_url, bank.imageUrl,
+      bank.icon_url, bank.iconUrl, bank.brand_logo_url, bank.brandLogoUrl,
       nestedInstitution.logo_url
-    ) || '',
+    ) || ''),
   };
 }
 
@@ -304,12 +236,9 @@ function normalizeConsent(rawConsent) {
   );
   const institutionId = normalizeId(
     firstDefinedValue(
-      consent.institution_id,
-      consent.institutionId,
-      consent.bank_id,
-      consent.bankId,
-      institution.id,
-      institution.institution_id
+      consent.institution_id, consent.institutionId,
+      consent.bank_id, consent.bankId,
+      institution.id, institution.institution_id
     )
   );
 
@@ -320,8 +249,13 @@ function normalizeConsent(rawConsent) {
     institution: {
       ...institution,
       id: normalizeId(firstDefinedValue(institution.id, institutionId)),
-      nome: institution.nome || firstDefinedValue(consent.institution_name, consent.institutionName, consent.bank_name, consent.bankName) || '',
-      logo_url: institution.logo_url || firstDefinedValue(consent.institution_logo_url, consent.institutionLogoUrl) || '',
+      nome: institution.nome || firstDefinedValue(
+        consent.institution_name, consent.institutionName,
+        consent.bank_name, consent.bankName
+      ) || '',
+      logo_url: resolveAssetUrl(institution.logo_url || firstDefinedValue(
+        consent.institution_logo_url, consent.institutionLogoUrl
+      ) || ''),
     },
   };
 }
@@ -355,14 +289,28 @@ function normalizeTransaction(rawTransaction) {
 }
 
 const CONNECTED_CONSENT_STATUSES = new Set([
-  'ativo',
-  'active',
-  'authorized',
-  'authorised',
-  'approved',
-  'connected',
-  'linked',
+  'ativo', 'active', 'authorized', 'authorised', 'approved', 'connected', 'linked',
 ]);
+
+/* ── Pluggy Connect Widget ──────────────────────────────────────── */
+function loadPluggyScript() {
+  return new Promise((resolve, reject) => {
+    if (window.PluggyConnect) return resolve();
+    const existing = document.querySelector('script[data-pluggy]');
+    if (existing) {
+      existing.addEventListener('load', resolve);
+      existing.addEventListener('error', reject);
+      return;
+    }
+    const script = document.createElement('script');
+    // ✅ URL corrigida — /latest/ no lugar de /v2/
+    script.src = 'https://cdn.pluggy.ai/pluggy-connect/latest/pluggy-connect.js';
+    script.setAttribute('data-pluggy', 'true');
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Falha ao carregar o Pluggy Connect.'));
+    document.head.appendChild(script);
+  });
+}
 
 /* ── Skeleton helpers ───────────────────────────────────────────── */
 function SkeletonCard({ rows = 3 }) {
@@ -378,14 +326,38 @@ function SkeletonCard({ rows = 3 }) {
   );
 }
 
+function InstitutionLogo({ Component, logoUrl, name }) {
+  const [hasError, setHasError] = useState(false);
+
+  useEffect(() => {
+    setHasError(false);
+  }, [logoUrl]);
+
+  return (
+    <Component>
+      {!logoUrl || hasError ? (
+        getDisplayInitial(name)
+      ) : (
+        <img
+          src={logoUrl}
+          alt={name || 'InstituiÃ§Ã£o'}
+          loading="lazy"
+          referrerPolicy="no-referrer"
+          onError={() => setHasError(true)}
+        />
+      )}
+    </Component>
+  );
+}
+
 /* ── Componente principal ───────────────────────────────────────── */
 const TABS = [
-  { key: 'overview', label: 'Visão geral' },
-  { key: 'transactions', label: 'Transações' },
-  { key: 'installments', label: 'Parcelamentos' },
+  { key: 'overview',      label: 'Visão geral' },
+  { key: 'transactions',  label: 'Transações' },
+  { key: 'installments',  label: 'Parcelamentos' },
   { key: 'subscriptions', label: 'Assinaturas' },
-  { key: 'categories', label: 'Categorias' },
-  { key: 'cards', label: 'Cartões' },
+  { key: 'categories',    label: 'Categorias' },
+  { key: 'cards',         label: 'Cartões' },
 ];
 
 export default function OpenFinance() {
@@ -394,30 +366,23 @@ export default function OpenFinance() {
 
   const [activeTab, setActiveTab] = useState('overview');
 
-  /* dados */
-  const [banks, setBanks] = useState([]);
-  const [consents, setConsents] = useState([]);
-  const [accounts, setAccounts] = useState([]);
+  const [banks, setBanks]               = useState([]);
+  const [consents, setConsents]         = useState([]);
+  const [accounts, setAccounts]         = useState([]);
   const [transactions, setTransactions] = useState([]);
 
-  /* loading por seção */
-  const [loadingBanks, setLoadingBanks] = useState(true);
-  const [loadingAccounts, setLoadingAccounts] = useState(true);
+  const [loadingBanks, setLoadingBanks]               = useState(true);
+  const [loadingAccounts, setLoadingAccounts]         = useState(true);
   const [loadingTransactions, setLoadingTransactions] = useState(true);
 
-  /* ações */
-  const [syncing, setSyncing] = useState(false);
-  const [connectingId, setConnectingId] = useState(null);
-  const [revokingId, setRevokingId] = useState(null);
+  const [syncing, setSyncing]             = useState(false);
+  const [connectingId, setConnectingId]   = useState(null);
+  const [revokingId, setRevokingId]       = useState(null);
   const [confirmRevoke, setConfirmRevoke] = useState(null);
   const [showConnectModal, setShowConnectModal] = useState(false);
 
-  /* filtros de transações */
   const [txFilters, setTxFilters] = useState({
-    tipo: '',
-    categoria: '',
-    data_inicio: '',
-    data_fim: '',
+    tipo: '', categoria: '', data_inicio: '', data_fim: '',
   });
 
   const [error, setError] = useState('');
@@ -425,8 +390,8 @@ export default function OpenFinance() {
   const connectedBankIds = useMemo(
     () => new Set(
       consents
-        .filter((consent) => CONNECTED_CONSENT_STATUSES.has(consent.status))
-        .map((consent) => normalizeId(firstDefinedValue(consent.institution?.id, consent.institution_id)))
+        .filter((c) => CONNECTED_CONSENT_STATUSES.has(c.status))
+        .map((c) => normalizeId(firstDefinedValue(c.institution?.id, c.institution_id)))
         .filter(Boolean)
     ),
     [consents]
@@ -446,7 +411,7 @@ export default function OpenFinance() {
       setLoadingBanks(true);
       const res = await getBanks();
       const data = getCollectionFromPayload(res.data, ['banks', 'institutions']);
-      setBanks(data.map(normalizeBank).filter((bank) => bank.id || bank.nome));
+      setBanks(data.map(normalizeBank).filter((b) => b.id || b.nome));
     } catch {
       setError('Erro ao carregar instituições disponíveis.');
     } finally {
@@ -458,10 +423,8 @@ export default function OpenFinance() {
     try {
       const res = await getConsents();
       const data = getCollectionFromPayload(res.data, ['consents']);
-      setConsents(data.map(normalizeConsent).filter((consent) => consent.id || consent.institution_id));
-    } catch {
-      /* silencioso — refletido no estado vazio */
-    }
+      setConsents(data.map(normalizeConsent).filter((c) => c.id || c.institution_id));
+    } catch { /* silencioso */ }
   }, []);
 
   const loadAccounts = useCallback(async () => {
@@ -469,30 +432,24 @@ export default function OpenFinance() {
       setLoadingAccounts(true);
       const res = await getAccounts();
       const data = getCollectionFromPayload(res.data, ['accounts']);
-      setAccounts(data.map(normalizeAccount).filter((account) => account.id || account.nome_conta));
-    } catch {
-      /* silencioso */
-    } finally {
-      setLoadingAccounts(false);
-    }
+      setAccounts(data.map(normalizeAccount).filter((a) => a.id || a.nome_conta));
+    } catch { /* silencioso */ }
+    finally { setLoadingAccounts(false); }
   }, []);
 
   const loadTransactions = useCallback(async (filters) => {
     try {
       setLoadingTransactions(true);
       const params = {};
-      if (filters?.tipo) params.tipo = filters.tipo;
-      if (filters?.categoria) params.categoria = filters.categoria;
+      if (filters?.tipo)        params.tipo        = filters.tipo;
+      if (filters?.categoria)   params.categoria   = filters.categoria;
       if (filters?.data_inicio) params.data_inicio = filters.data_inicio;
-      if (filters?.data_fim) params.data_fim = filters.data_fim;
+      if (filters?.data_fim)    params.data_fim    = filters.data_fim;
       const res = await getTransactions(params);
       const data = getCollectionFromPayload(res.data, ['transactions']);
       setTransactions(data.map(normalizeTransaction));
-    } catch {
-      /* silencioso */
-    } finally {
-      setLoadingTransactions(false);
-    }
+    } catch { /* silencioso */ }
+    finally { setLoadingTransactions(false); }
   }, []);
 
   useEffect(() => {
@@ -512,53 +469,57 @@ export default function OpenFinance() {
     setError('');
     setShowConnectModal(false);
     setConnectingId(bank.id);
-    const authWindow = window.open('', '_blank');
-
-    if (authWindow) {
-      authWindow.document.title = 'Conectando banco...';
-      authWindow.document.body.innerHTML = `
-        <div style="font-family: Arial, sans-serif; padding: 24px; line-height: 1.5;">
-          Redirecionando para a autorização do banco...
-        </div>
-      `;
-      authWindow.opener = null;
-    }
 
     try {
       const res = await createConsent({ institution_id: bank.id });
-      const redirectUrl = getConsentRedirectUrl(res.data);
-      if (!redirectUrl) throw new Error('missing_redirect_url');
+      const connectToken = res.data?.connect_token;
 
-      if (authWindow && !authWindow.closed) {
-        authWindow.location.replace(redirectUrl);
-      } else {
-        window.location.assign(redirectUrl);
+      if (!connectToken) {
+        throw new Error('connect_token não retornado pelo servidor.');
       }
 
-      await loadConsents();
-      await loadAccounts();
-    } catch {
-      if (authWindow && !authWindow.closed) {
-        authWindow.close();
-      }
-      setError('Erro ao iniciar conexão com o banco. Tente novamente.');
+      await loadPluggyScript();
+
+      const pluggyConnect = new window.PluggyConnect({
+        connectToken,
+        onSuccess: async ({ item }) => {
+          console.log('Pluggy: item conectado', item);
+          await loadAccounts();
+          await loadConsents();
+          await loadTransactions({});
+        },
+        onError: (err) => {
+          console.error('Pluggy: erro no widget', err);
+          setError('Erro durante a autorização. Tente novamente.');
+        },
+        onClose: () => {
+          // widget fechado sem completar — sem ação necessária
+        },
+      });
+
+      // ✅ .init() renderiza o widget no body
+    await pluggyConnect.init();
+
+    } catch (err) {
+      const detail =
+        err?.response?.data?.detail ||
+        err?.response?.data?.message ||
+        err?.message ||
+        'Falha ao iniciar conexão. Tente novamente.';
+      console.error('Erro ao conectar banco:', err?.response?.data ?? err);
+      setError(`Erro: ${detail}`);
     } finally {
       setConnectingId(null);
     }
-  }, [loadAccounts, loadConsents]);
+  }, [loadAccounts, loadConsents, loadTransactions]);
 
   const handleStartBankConnection = useCallback(() => {
     setError('');
-
-    if (activeTab !== 'overview') {
-      setActiveTab('overview');
-    }
-
+    if (activeTab !== 'overview') setActiveTab('overview');
     if (!loadingBanks && availableBanks.length === 1) {
       handleConnect(availableBanks[0]);
       return;
     }
-
     setShowConnectModal(true);
   }, [activeTab, availableBanks, handleConnect, loadingBanks]);
 
@@ -592,9 +553,7 @@ export default function OpenFinance() {
     }
   };
 
-  const handleApplyFilters = () => {
-    loadTransactions(txFilters);
-  };
+  const handleApplyFilters = () => loadTransactions(txFilters);
 
   /* ── Derivações ───────────────────────────────────────────────── */
   const totalBalance = useMemo(
@@ -602,7 +561,6 @@ export default function OpenFinance() {
     [accounts]
   );
 
-  /* KPIs a partir de transações */
   const now = new Date();
   const mesAtual = now.getMonth();
   const anoAtual = now.getFullYear();
@@ -631,7 +589,6 @@ export default function OpenFinance() {
     return sorted[0]?.[0] ?? '-';
   }, [txDoMes]);
 
-  /* Agrupamento de transações por data */
   const groupedTransactions = useMemo(() => {
     const groups = {};
     transactions.forEach((t) => {
@@ -644,7 +601,6 @@ export default function OpenFinance() {
       .slice(0, 10);
   }, [transactions]);
 
-  /* Heatmap */
   const heatmapData = useMemo(() => {
     const map = {};
     txDoMes.filter(t => t.tipo === 'debito').forEach(t => {
@@ -664,7 +620,6 @@ export default function OpenFinance() {
   const mediaDiaria = txDoMes.length > 0 ? gastoMes / diasNoMes : 0;
   const picoDia = Object.entries(heatmapData).sort((a, b) => b[1] - a[1])[0];
 
-  /* Categorias ranking */
   const categoriesRanking = useMemo(() => {
     const map = {};
     txDoMes.filter(t => t.tipo === 'debito').forEach(t => {
@@ -678,7 +633,6 @@ export default function OpenFinance() {
       .slice(0, 8);
   }, [txDoMes]);
 
-  /* Assinaturas (inferidas de is_recurring) */
   const subscriptions = useMemo(
     () => transactions.filter(t => t.is_recurring || t.origem === 'recorrente'),
     [transactions]
@@ -689,13 +643,11 @@ export default function OpenFinance() {
     [subscriptions]
   );
 
-  /* Parcelamentos */
   const installments = useMemo(
     () => transactions.filter(t => t.is_installment),
     [transactions]
   );
 
-  /* Insight gerado dinamicamente */
   const insight = useMemo(() => {
     if (gastoMes === 0) {
       return {
@@ -718,11 +670,8 @@ export default function OpenFinance() {
   const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
   /* ── Render por tab ───────────────────────────────────────────── */
-
-  /* --- Visão Geral --- */
   const renderOverview = () => (
     <>
-      {/* Hero de insight */}
       <InsightHero>
         <InsightIcon>💡</InsightIcon>
         <InsightText>
@@ -734,7 +683,6 @@ export default function OpenFinance() {
         </InsightText>
       </InsightHero>
 
-      {/* KPIs */}
       <KpiGrid>
         <KpiCard>
           <KpiLabel>Gasto em {new Date().toLocaleDateString('pt-BR', { month: 'long' })}</KpiLabel>
@@ -758,7 +706,6 @@ export default function OpenFinance() {
       </KpiGrid>
 
       <ContentGrid>
-        {/* Contas conectadas */}
         <Card>
           <CardHeader>
             <CardTitle>Contas conectadas</CardTitle>
@@ -782,11 +729,11 @@ export default function OpenFinance() {
                 {accounts.map((acc) => (
                   <AccountItem key={acc.id}>
                     <AccountLeft>
-                      <AccountLogo>
-                        {acc.institution?.logo_url
-                          ? <img src={acc.institution.logo_url} alt={acc.institution?.nome} />
-                          : (acc.institution?.nome?.[0] ?? acc.nome_conta?.[0] ?? '?')}
-                      </AccountLogo>
+                      <InstitutionLogo
+                        Component={AccountLogo}
+                        logoUrl={acc.institution?.logo_url}
+                        name={acc.institution?.nome ?? acc.nome_conta}
+                      />
                       <div>
                         <AccountName>{acc.institution?.nome ?? acc.nome_conta}</AccountName>
                         <AccountType>{getAccountTypeLabel(acc.tipo)}</AccountType>
@@ -800,7 +747,6 @@ export default function OpenFinance() {
           )}
         </Card>
 
-        {/* Mapa de calor */}
         <Card>
           <CardHeader>
             <CardTitle>Mapa de calor</CardTitle>
@@ -839,20 +785,15 @@ export default function OpenFinance() {
                   intensity={intensity}
                   hasData={val > 0}
                   title={val > 0 ? `Dia ${day}: ${formatBRL(val)}` : `Dia ${day}`}
-                  onClick={() => {
-                    if (val > 0) setActiveTab('transactions');
-                  }}
+                  onClick={() => { if (val > 0) setActiveTab('transactions'); }}
                 >
-                  {val > 0 && (
-                    <Tooltip>{formatBRL(val)}</Tooltip>
-                  )}
+                  {val > 0 && <Tooltip>{formatBRL(val)}</Tooltip>}
                 </HeatmapCell>
               );
             })}
           </HeatmapGrid>
         </Card>
 
-        {/* Transações recentes */}
         <Card>
           <CardHeader>
             <CardTitle>Transações recentes</CardTitle>
@@ -893,7 +834,6 @@ export default function OpenFinance() {
           )}
         </Card>
 
-        {/* Assinaturas */}
         <Card>
           <CardHeader>
             <CardTitle>Assinaturas</CardTitle>
@@ -932,7 +872,6 @@ export default function OpenFinance() {
     </>
   );
 
-  /* --- Transações --- */
   const renderTransactions = () => (
     <FullWidthCard as="div" style={{ background: 'none', border: 'none', padding: 0 }}>
       <Card>
@@ -1009,7 +948,6 @@ export default function OpenFinance() {
     </FullWidthCard>
   );
 
-  /* --- Parcelamentos --- */
   const renderInstallments = () => (
     <Card>
       <CardHeader>
@@ -1031,9 +969,7 @@ export default function OpenFinance() {
               <InstallmentItem key={item.id}>
                 <InstallmentInfo>
                   <InstallmentName>{item.descricao}</InstallmentName>
-                  <InstallmentProgress>
-                    {pagas}/{total} parcelas pagas
-                  </InstallmentProgress>
+                  <InstallmentProgress>{pagas}/{total} parcelas pagas</InstallmentProgress>
                   <InstallmentProgressBar pct={pct} />
                 </InstallmentInfo>
                 <InstallmentAmount>{formatBRL(item.valor)}/mês</InstallmentAmount>
@@ -1045,7 +981,6 @@ export default function OpenFinance() {
     </Card>
   );
 
-  /* --- Assinaturas --- */
   const renderSubscriptions = () => (
     <Card>
       <CardHeader>
@@ -1082,11 +1017,12 @@ export default function OpenFinance() {
     </Card>
   );
 
-  /* --- Categorias --- */
   const renderCategories = () => (
     <Card>
       <CardHeader>
-        <CardTitle>Principais categorias — {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}</CardTitle>
+        <CardTitle>
+          Principais categorias — {new Date().toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+        </CardTitle>
       </CardHeader>
       {categoriesRanking.length === 0 ? (
         <EmptyState>
@@ -1129,7 +1065,6 @@ export default function OpenFinance() {
     </Card>
   );
 
-  /* --- Cartões --- */
   const renderCards = () => (
     <Card>
       <CardHeader>
@@ -1146,7 +1081,6 @@ export default function OpenFinance() {
     </Card>
   );
 
-  /* --- Bancos disponíveis (sempre visível na página) --- */
   const renderBanksSection = () => (
     <Card>
       <CardHeader>
@@ -1156,18 +1090,17 @@ export default function OpenFinance() {
         </SecondaryBtn>
       </CardHeader>
 
-      {/* Consentimentos ativos */}
       {consents.length > 0 && (
         <>
           <CardTitle style={{ marginBottom: 12 }}>Conexões ativas</CardTitle>
           <ConsentList style={{ marginBottom: 24 }}>
             {consents.map((c) => (
               <ConsentItem key={c.id}>
-                <AccountLogo>
-                  {c.institution?.logo_url
-                    ? <img src={c.institution.logo_url} alt={c.institution?.nome} />
-                    : (c.institution?.nome?.[0] ?? '?')}
-                </AccountLogo>
+                <InstitutionLogo
+                  Component={AccountLogo}
+                  logoUrl={c.institution?.logo_url}
+                  name={c.institution?.nome}
+                />
                 <ConsentInfo>
                   <ConsentBank>{c.institution?.nome ?? `Banco #${c.id}`}</ConsentBank>
                   <ConsentExpiry>Expira em: {formatDateBR(c.expires_at?.split('T')[0])}</ConsentExpiry>
@@ -1206,11 +1139,11 @@ export default function OpenFinance() {
             const isConnecting = connectingId === bank.id;
             return (
               <BankCard key={bank.id}>
-                <BankLogo>
-                  {bank.logo_url
-                    ? <img src={bank.logo_url} alt={bank.nome} />
-                    : bank.nome?.[0]}
-                </BankLogo>
+                <InstitutionLogo
+                  Component={BankLogo}
+                  logoUrl={bank.logo_url}
+                  name={bank.nome}
+                />
                 <BankName>{bank.nome}</BankName>
                 <BankStatus connected={isConnected}>
                   {isConnected ? '✓ Conectado' : 'Disponível'}
@@ -1269,23 +1202,17 @@ export default function OpenFinance() {
           {renderBanksSection()}
         </>
       )}
-      {activeTab === 'transactions' && renderTransactions()}
-      {activeTab === 'installments' && renderInstallments()}
+      {activeTab === 'transactions'  && renderTransactions()}
+      {activeTab === 'installments'  && renderInstallments()}
       {activeTab === 'subscriptions' && renderSubscriptions()}
-      {activeTab === 'categories' && renderCategories()}
-      {activeTab === 'cards' && renderCards()}
+      {activeTab === 'categories'    && renderCategories()}
+      {activeTab === 'cards'         && renderCards()}
 
-      {/* FAB de chat com IA */}
-      <ChatFab title="Conversar com IA" onClick={() => {}}>
-        💬
-      </ChatFab>
+      <ChatFab title="Conversar com IA" onClick={() => {}}>💬</ChatFab>
 
       {showConnectModal && (
         <ModalOverlay onClick={() => setShowConnectModal(false)}>
-          <ModalBox
-            onClick={(e) => e.stopPropagation()}
-            style={{ maxWidth: 760 }}
-          >
+          <ModalBox onClick={(e) => e.stopPropagation()} style={{ maxWidth: 760 }}>
             <ModalTitle>Conectar novo banco</ModalTitle>
             <ModalText>
               Escolha uma instituição para iniciar a autorização do Open Finance.
@@ -1301,7 +1228,9 @@ export default function OpenFinance() {
               <EmptyState style={{ padding: '1rem 0 0' }}>
                 <EmptyIcon>🏦</EmptyIcon>
                 <EmptyTitle>
-                  {banks.length === 0 ? 'Nenhuma instituição retornada pela API' : 'Nenhum novo banco disponível'}
+                  {banks.length === 0
+                    ? 'Nenhuma instituição retornada pela API'
+                    : 'Nenhum novo banco disponível'}
                 </EmptyTitle>
                 <EmptyDesc>
                   {banks.length === 0
@@ -1313,14 +1242,13 @@ export default function OpenFinance() {
               <BanksGrid>
                 {availableBanks.map((bank) => {
                   const isConnecting = connectingId === bank.id;
-
                   return (
                     <BankCard key={`modal-${bank.id}`}>
-                      <BankLogo>
-                        {bank.logo_url
-                          ? <img src={bank.logo_url} alt={bank.nome} />
-                          : bank.nome?.[0]}
-                      </BankLogo>
+                      <InstitutionLogo
+                        Component={BankLogo}
+                        logoUrl={bank.logo_url}
+                        name={bank.nome}
+                      />
                       <BankName>{bank.nome}</BankName>
                       <BankStatus>Disponível</BankStatus>
                       <PrimaryBtn
@@ -1337,15 +1265,12 @@ export default function OpenFinance() {
             )}
 
             <ModalActions style={{ marginTop: 24 }}>
-              <SecondaryBtn onClick={() => setShowConnectModal(false)}>
-                Fechar
-              </SecondaryBtn>
+              <SecondaryBtn onClick={() => setShowConnectModal(false)}>Fechar</SecondaryBtn>
             </ModalActions>
           </ModalBox>
         </ModalOverlay>
       )}
 
-      {/* Modal de confirmação de revogação */}
       {confirmRevoke && (
         <ModalOverlay onClick={() => setConfirmRevoke(null)}>
           <ModalBox onClick={(e) => e.stopPropagation()}>

@@ -21,6 +21,7 @@ export const PageWrapper = styled.div`
   flex-direction: column;
   gap: 1.5rem;
   animation: ${fadeIn} 0.3s ease;
+  position: relative;
 `;
 
 export const PageHeader = styled.div`
@@ -61,6 +62,7 @@ export const TabBar = styled.div`
   gap: 0.25rem;
   border-bottom: 1px solid ${({ theme }) => theme.colors.border};
   overflow-x: auto;
+  padding-bottom: 0.125rem;
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 `;
@@ -87,11 +89,14 @@ export const Tab = styled.button`
 
 /* ── Cards ───────────────────────────────────────────────────────── */
 export const Card = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.glassBg};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 1.25rem;
   animation: ${fadeIn} 0.3s ease;
+  box-shadow: ${({ theme }) => theme.colors.glassShadow};
+  backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  -webkit-backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
 `;
 
 export const CardHeader = styled.div`
@@ -136,13 +141,24 @@ export const FullWidthCard = styled(Card)`
 
 /* ── Hero de insight ─────────────────────────────────────────────── */
 export const InsightHero = styled.div`
-  background: ${({ theme }) => theme.colors.surface2};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.gradientAI};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 1.25rem;
   display: flex;
   align-items: flex-start;
   gap: 1rem;
+  box-shadow: ${({ theme }) => theme.colors.glassShadow};
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, ${({ theme }) => theme.colors.glassHighlight} 0%, transparent 100%);
+    pointer-events: none;
+  }
 `;
 
 export const InsightIcon = styled.div`
@@ -236,9 +252,10 @@ export const AccountItem = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem;
-  background: ${({ theme }) => theme.colors.surfaceOffset};
+  background: ${({ theme }) => theme.colors.glassBgElevated};
   border-radius: ${({ theme }) => theme.radius.md};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  box-shadow: inset 0 1px 0 ${({ theme }) => theme.colors.glassHighlight};
 `;
 
 export const AccountLeft = styled.div`
@@ -251,7 +268,8 @@ export const AccountLogo = styled.div`
   width: 36px;
   height: 36px;
   border-radius: ${({ theme }) => theme.radius.md};
-  background: ${({ theme }) => theme.colors.primaryHighlight};
+  background: ${({ theme }) => theme.colors.glassBgElevated};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
   color: ${({ theme }) => theme.colors.primary};
   display: flex;
   align-items: center;
@@ -323,10 +341,11 @@ export const ConsentItem = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem;
-  background: ${({ theme }) => theme.colors.surfaceOffset};
+  background: ${({ theme }) => theme.colors.glassBgElevated};
   border-radius: ${({ theme }) => theme.radius.md};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
   gap: 0.75rem;
+  box-shadow: inset 0 1px 0 ${({ theme }) => theme.colors.glassHighlight};
 `;
 
 export const ConsentInfo = styled.div`
@@ -516,15 +535,19 @@ export const BankCard = styled.div`
   align-items: center;
   gap: 0.75rem;
   padding: 1rem;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.glassBgElevated};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
   border-radius: ${({ theme }) => theme.radius.lg};
   text-align: center;
   transition: ${({ theme }) => theme.transition};
+  box-shadow: ${({ theme }) => theme.colors.glassShadow};
+  backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  -webkit-backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
 
   &:hover {
     border-color: ${({ theme }) => theme.colors.primary};
-    box-shadow: 0 4px 12px ${({ theme }) => theme.colors.shadow};
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px ${({ theme }) => theme.colors.shadowMd};
   }
 `;
 
@@ -532,7 +555,8 @@ export const BankLogo = styled.div`
   width: 48px;
   height: 48px;
   border-radius: ${({ theme }) => theme.radius.md};
-  background: ${({ theme }) => theme.colors.primaryHighlight};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
   color: ${({ theme }) => theme.colors.primary};
   display: flex;
   align-items: center;
@@ -567,8 +591,8 @@ export const PrimaryBtn = styled.button`
   align-items: center;
   gap: 0.5rem;
   padding: 0.5rem 1rem;
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.textInverse};
+  background: ${({ theme }) => theme.colors.gradientCTA};
+  color: ${({ theme }) => theme.colors.textOnPrimary};
   border: none;
   border-radius: ${({ theme }) => theme.radius.md};
   font-size: 0.875rem;
@@ -576,8 +600,12 @@ export const PrimaryBtn = styled.button`
   cursor: pointer;
   transition: ${({ theme }) => theme.transition};
   white-space: nowrap;
+  box-shadow: 0 12px 24px ${({ theme }) => theme.colors.shadow};
 
-  &:hover { background: ${({ theme }) => theme.colors.primaryHover}; }
+  &:hover {
+    filter: brightness(1.05);
+    transform: translateY(-1px);
+  }
   &:disabled { opacity: 0.5; cursor: not-allowed; }
 `;
 
@@ -679,7 +707,8 @@ export const ErrorBanner = styled.div`
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
+  background: ${({ theme }) => theme.colors.overlay};
+  backdrop-filter: blur(10px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -688,13 +717,16 @@ export const ModalOverlay = styled.div`
 `;
 
 export const ModalBox = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  background: ${({ theme }) => theme.colors.glassBgElevated};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 1.5rem;
   width: 100%;
   max-width: 400px;
   animation: ${fadeIn} 0.2s ease;
+  box-shadow: ${({ theme }) => theme.colors.glassShadow};
+  backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  -webkit-backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
 `;
 
 export const ModalTitle = styled.h3`
@@ -780,7 +812,7 @@ export const Tooltip = styled.div`
   left: 50%;
   transform: translateX(-50%);
   background: ${({ theme }) => theme.colors.text};
-  color: ${({ theme }) => theme.colors.textInverse};
+  color: ${({ theme }) => theme.colors.bg};
   font-size: 11px;
   font-weight: 600;
   white-space: nowrap;
@@ -1044,8 +1076,8 @@ export const ChatFab = styled.button`
   width: 52px;
   height: 52px;
   border-radius: ${({ theme }) => theme.radius.full};
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.textInverse};
+  background: ${({ theme }) => theme.colors.gradientCTA};
+  color: ${({ theme }) => theme.colors.textOnPrimary};
   border: none;
   cursor: pointer;
   box-shadow: 0 4px 20px ${({ theme }) => theme.colors.shadowMd};
@@ -1057,7 +1089,7 @@ export const ChatFab = styled.button`
   z-index: 100;
 
   &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
+    filter: brightness(1.05);
     box-shadow: 0 6px 28px ${({ theme }) => theme.colors.shadowLg};
     transform: scale(1.06);
   }

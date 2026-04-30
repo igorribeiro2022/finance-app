@@ -4,11 +4,12 @@ import { ThemeProvider } from 'styled-components';
 import { useSelector } from 'react-redux';
 import AppRoutes from './routes';
 import GlobalStyles from './styles/GlobalStyles';
-import { lightTheme, darkTheme } from './styles/theme';
+import { getTheme } from './styles/theme';
 
 function App() {
+  const themePalette = useSelector((state) => state.ui.themePalette);
   const themeMode = useSelector((state) => state.ui.themeMode);
-  const theme = themeMode === 'dark' ? darkTheme : lightTheme;
+  const theme = getTheme(themePalette, themeMode);
 
   return (
     <BrowserRouter>

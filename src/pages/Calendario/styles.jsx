@@ -1,4 +1,5 @@
 import styled, { keyframes } from 'styled-components';
+import { glassPanel, glassPanelElevated } from '../../styles/mixins';
 
 const shimmer = keyframes`
   0%   { background-position: -200% 0; }
@@ -36,8 +37,8 @@ export const TopBar = styled.div`
 // ── Tabs de visualização ───────────────────────────────────────────────────
 
 export const ViewTabs = styled.div`
+  ${glassPanel}
   display: flex;
-  background: ${({ theme }) => theme.colors.surfaceOffset};
   border-radius: ${({ theme }) => theme.radius.full};
   padding: 3px;
   gap: 2px;
@@ -93,7 +94,7 @@ export const NavButton = styled.button`
   align-items: center;
   justify-content: center;
   background: ${({ $today, theme }) => $today ? theme.colors.primary : theme.colors.surface};
-  color: ${({ $today, theme }) => $today ? theme.colors.textInverse : theme.colors.text};
+  color: ${({ $today, theme }) => $today ? theme.colors.textOnPrimary : theme.colors.text};
   transition: ${({ theme }) => theme.transition};
 
   &:hover {
@@ -196,6 +197,9 @@ export const DayCell = styled.div`
   flex-direction: column;
   gap: 2px;
   overflow: hidden;
+  backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  -webkit-backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  box-shadow: ${({ theme }) => theme.colors.glassShadow};
 
   &:hover {
     background: ${({ theme }) => theme.colors.surfaceOffset};
@@ -251,8 +255,10 @@ export const EventChip = styled.div`
   overflow: hidden;
   text-overflow: ellipsis;
   line-height: 1.4;
-  background: ${({ $color }) => $color === 'income' ? '#437a22' : $color === 'expense' ? '#a12c7b' : '#888'};
-  color: #fff;
+  background: ${({ theme, $color }) =>
+    $color === 'income' ? theme.colors.success : $color === 'expense' ? theme.colors.error : theme.colors.neutral};
+  color: ${({ theme, $color }) =>
+    $color === 'income' ? theme.colors.textOnSuccess : $color === 'expense' ? theme.colors.textOnError : theme.colors.textOnInverse};
 
   @media (max-width: 480px) {
     font-size: 0.6rem;
@@ -296,6 +302,9 @@ export const WeekDayCol = styled.div`
   overflow: hidden;
   cursor: pointer;
   transition: ${({ theme }) => theme.transition};
+  backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  -webkit-backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  box-shadow: ${({ theme }) => theme.colors.glassShadow};
 
   &:hover { border-color: ${({ theme }) => theme.colors.primary}; }
 `;
@@ -333,8 +342,10 @@ export const WeekEventBlock = styled.div`
   display: flex;
   flex-direction: column;
   gap: 1px;
-  background: ${({ $color }) => $color === 'income' ? '#437a22' : $color === 'expense' ? '#a12c7b' : '#888'};
-  color: #fff;
+  background: ${({ theme, $color }) =>
+    $color === 'income' ? theme.colors.success : $color === 'expense' ? theme.colors.error : theme.colors.neutral};
+  color: ${({ theme, $color }) =>
+    $color === 'income' ? theme.colors.textOnSuccess : $color === 'expense' ? theme.colors.textOnError : theme.colors.textOnInverse};
   overflow: hidden;
 
   @media (max-width: 768px) { font-size: 0.6rem; padding: 0.2rem 0.3rem; }
@@ -357,13 +368,12 @@ export const DayViewDate = styled.h2`
 `;
 
 export const TimelineItem = styled.div`
+  ${glassPanel}
   display: flex;
   align-items: flex-start;
   gap: 0.75rem;
   padding: 0.75rem 1rem;
   border-radius: ${({ theme }) => theme.radius.md};
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
 `;
 
 export const TimelineDot = styled.div`
@@ -372,7 +382,8 @@ export const TimelineDot = styled.div`
   border-radius: 50%;
   margin-top: 4px;
   flex-shrink: 0;
-  background: ${({ $color }) => $color === 'income' ? '#437a22' : $color === 'expense' ? '#a12c7b' : '#888'};
+  background: ${({ theme, $color }) =>
+    $color === 'income' ? theme.colors.success : $color === 'expense' ? theme.colors.error : theme.colors.neutral};
 `;
 
 export const TimelineInfo = styled.div`
@@ -415,8 +426,7 @@ export const YearGrid = styled.div`
 `;
 
 export const YearMonthCard = styled.div`
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1.5px solid ${({ theme }) => theme.colors.border};
+  ${glassPanelElevated}
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 0.75rem;
   cursor: pointer;
@@ -453,11 +463,11 @@ export const YearMiniDay = styled.div`
     : $today ? theme.colors.primary
     : theme.colors.text};
   border-radius: 3px;
-  background: ${({ $hasIncome, $hasExpense, $today }) =>
-    $today ? 'rgba(89,61,45,0.15)'
-    : $hasIncome && $hasExpense ? 'linear-gradient(135deg, #437a2240 50%, #a12c7b40 50%)'
-    : $hasIncome ? '#437a2230'
-    : $hasExpense ? '#a12c7b30'
+  background: ${({ theme, $hasIncome, $hasExpense, $today }) =>
+    $today ? theme.colors.primaryHighlight
+    : $hasIncome && $hasExpense ? `linear-gradient(135deg, ${theme.colors.success}30 50%, ${theme.colors.error}30 50%)`
+    : $hasIncome ? `${theme.colors.success}24`
+    : $hasExpense ? `${theme.colors.error}24`
     : 'transparent'};
   position: relative;
 `;
@@ -465,10 +475,9 @@ export const YearMiniDay = styled.div`
 // ── Painel de detalhes ──────────────────────────────────────────────────────
 
 export const DetailPanel = styled.div`
+  ${glassPanelElevated}
   margin-top: 1.5rem;
   padding: 1rem 1.25rem;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1.5px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.lg};
 `;
 
@@ -492,14 +501,14 @@ export const DetailItem = styled.div`
   gap: 1rem;
   padding: 0.6rem 0.85rem;
   border-radius: ${({ theme }) => theme.radius.md};
-  background: ${({ $color }) =>
-    $color === 'income' ? 'rgba(67,122,34,0.07)'
-    : $color === 'expense' ? 'rgba(161,44,123,0.07)'
+  background: ${({ theme, $color }) =>
+    $color === 'income' ? `${theme.colors.success}12`
+    : $color === 'expense' ? `${theme.colors.error}12`
     : 'transparent'};
-  border-left: 3px solid ${({ $color }) =>
-    $color === 'income' ? '#437a22'
-    : $color === 'expense' ? '#a12c7b'
-    : '#888'};
+  border-left: 3px solid ${({ theme, $color }) =>
+    $color === 'income' ? theme.colors.success
+    : $color === 'expense' ? theme.colors.error
+    : theme.colors.neutral};
 
   @media (max-width: 480px) {
     flex-direction: column;

@@ -1,4 +1,5 @@
 import styled, { keyframes } from 'styled-components';
+import { glassPanel, glassPanelElevated } from '../../styles/mixins';
 
 const shimmer = keyframes`
   0% { background-position: -200% 0; }
@@ -29,8 +30,7 @@ export const KpiGrid = styled.div`
 `;
 
 export const KpiCard = styled.div`
-  background-color: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  ${glassPanel}
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 1.25rem;
   display: flex;
@@ -79,8 +79,7 @@ export const ChartsGrid = styled.div`
 `;
 
 export const ChartCard = styled.div`
-  background-color: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  ${glassPanelElevated}
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 1.25rem;
   box-shadow: 0 1px 3px ${({ theme }) => theme.colors.shadow};
@@ -97,8 +96,7 @@ export const ChartTitle = styled.h3`
 `;
 
 export const AgendaCard = styled.div`
-  background-color: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
+  ${glassPanelElevated}
   border-radius: ${({ theme }) => theme.radius.lg};
   padding: 1.25rem;
   box-shadow: 0 1px 3px ${({ theme }) => theme.colors.shadow};

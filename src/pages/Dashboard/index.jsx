@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
+import { useTheme } from 'styled-components';
 import {
   PieChart, Pie, Cell, BarChart, Bar, LineChart, Line,
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid,
@@ -8,7 +9,7 @@ import {
 import { getDashboard } from '../../services/dashboard';
 import {
   PageHeader, PageTitle, PageSubtitle,
-  KpiGrid, KpiCard, KpiLabel, KpiValue, KpiIcon, KpiDelta,
+  KpiGrid, KpiCard, KpiLabel, KpiValue, KpiIcon,
   ChartsGrid, ChartCard, ChartTitle,
   AgendaCard, AgendaTitle, AgendaList, AgendaItem,
   AgendaInfo, AgendaDesc, AgendaDate, AgendaValue,
@@ -23,9 +24,6 @@ const fadeUp = {
     transition: { delay: i * 0.07, duration: 0.4, ease: 'easeOut' },
   }),
 };
-
-const COLORS_GASTOS  = ['#593D2D','#A6806A','#D9B29C','#8B6355','#C9A08A','#261C14'];
-const COLORS_GANHOS  = ['#28BF11','#4FBF30','#1a8f08','#76D95F','#0f6b00','#9BE085'];
 
 function fmt(value) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
@@ -52,12 +50,17 @@ function getKpis(data) {
   };
 }
 
-function CustomTooltip({ active, payload, label }) {
+function CustomTooltip({ active, payload, label, theme }) {
   if (!active || !payload?.length) return null;
   return (
     <div style={{
-      background: 'var(--tt-bg, #fff)', border: '1px solid rgba(0,0,0,.1)',
+      background: theme.colors.glassBgElevated,
+      border: `1px solid ${theme.colors.glassBorder}`,
+      color: theme.colors.text,
       borderRadius: 8, padding: '8px 12px', fontSize: 12,
+      backdropFilter: theme.colors.glassBackdrop,
+      WebkitBackdropFilter: theme.colors.glassBackdrop,
+      boxShadow: theme.colors.glassShadow,
     }}>
       {label && <p style={{ marginBottom: 4, fontWeight: 600 }}>{label}</p>}
       {payload.map((p, i) => (
@@ -94,10 +97,25 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError]   = useState('');
   const { user }            = useSelector((s) => s.auth);
-  const themeMode           = useSelector((s) => s.ui?.themeMode);
-  const isDark              = themeMode === 'dark';
-  const tickColor           = isDark ? '#D9B29C' : '#593D2D';
-  const gridColor           = isDark ? 'rgba(242,242,235,0.06)' : 'rgba(38,28,20,0.06)';
+  const theme               = useTheme();
+  const tickColor           = theme.colors.textMuted;
+  const gridColor           = theme.colors.divider;
+  const expenseColors       = useMemo(() => [
+    theme.colors.primary,
+    theme.colors.accent,
+    theme.colors.link,
+    theme.colors.primaryHover,
+    theme.colors.neutral,
+    theme.colors.textMuted,
+  ], [theme]);
+  const incomeColors        = useMemo(() => [
+    theme.colors.success,
+    theme.colors.successAlt,
+    '#1F8A58',
+    '#6ED59B',
+    '#A7E6C0',
+    '#DDF8E9',
+  ], [theme]);
 
   useEffect(() => {
     (async () => {
@@ -126,10 +144,6 @@ export default function Dashboard() {
     { name: 'R. Fixos',     valor: num(fixosVsEventuais.ganhos_fixos    ?? fixosVsEventuais.ganhosfixos) },
     { name: 'R. Eventuais', valor: num(fixosVsEventuais.ganhos_eventuais ?? fixosVsEventuais.ganhoseventuais) },
   ], [fixosVsEventuais]);
-
-  const saldoColor = kpis.saldoMes >= 0
-    ? (isDark ? '#4FBF30' : '#28BF11')
-    : (isDark ? '#F22929' : '#D90707');
 
   const kpiCards = [
     { label: 'Saldo do Mês',       value: fmt(kpis.saldoMes),        icon: '◈', type: kpis.saldoMes >= 0 ? 'income' : 'expense', highlight: true },
@@ -192,10 +206,10 @@ export default function Dashboard() {
                       labelLine={false}
                     >
                       {gastosCategoria.map((_, i) => (
-                        <Cell key={i} fill={COLORS_GASTOS[i % COLORS_GASTOS.length]} />
+                        <Cell key={i} fill={expenseColors[i % expenseColors.length]} />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip theme={theme} />} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : <EmptyState>Nenhum gasto registrado</EmptyState>}
@@ -215,10 +229,10 @@ export default function Dashboard() {
                       labelLine={false}
                     >
                       {ganhosCategoria.map((_, i) => (
-                        <Cell key={i} fill={COLORS_GANHOS[i % COLORS_GANHOS.length]} />
+                        <Cell key={i} fill={incomeColors[i % incomeColors.length]} />
                       ))}
                     </Pie>
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip theme={theme} />} />
                   </PieChart>
                 </ResponsiveContainer>
               ) : <EmptyState>Nenhum ganho registrado</EmptyState>}
@@ -232,7 +246,7 @@ export default function Dashboard() {
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                   <XAxis dataKey="name" tick={{ fontSize: 11, fill: tickColor }} axisLine={false} tickLine={false} />
                   <YAxis tick={{ fontSize: 11, fill: tickColor }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip />} />
+                  <Tooltip content={<CustomTooltip theme={theme} />} />
                   <Bar dataKey="valor" radius={[6, 6, 0, 0]}>
                     {fixosEventuaisData.map((_, i) => (
                       <Cell key={i} fill={i < 2 ? '#D90707' : '#28BF11'} />
@@ -251,7 +265,7 @@ export default function Dashboard() {
                     <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
                     <XAxis dataKey="mes" tick={{ fontSize: 11, fill: tickColor }} axisLine={false} tickLine={false} />
                     <YAxis tick={{ fontSize: 11, fill: tickColor }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTooltip />} />
+                    <Tooltip content={<CustomTooltip theme={theme} />} />
                     <Legend wrapperStyle={{ fontSize: 12 }} />
                     <Line type="monotone" dataKey="gastos" name="Gastos" stroke="#D90707" strokeWidth={2.5} dot={{ r: 4, fill: '#D90707' }} activeDot={{ r: 6 }} />
                     <Line type="monotone" dataKey="ganhos" name="Ganhos" stroke="#28BF11" strokeWidth={2.5} dot={{ r: 4, fill: '#28BF11' }} activeDot={{ r: 6 }} />

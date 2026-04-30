@@ -1,5 +1,6 @@
 import styled, { keyframes } from 'styled-components';
 import { motion } from 'framer-motion';
+import { glassPanel, gradientPrimaryButton } from '../../styles/mixins';
 
 const spin = keyframes`
   to { transform: rotate(360deg); }
@@ -12,6 +13,7 @@ export const Container = styled.div`
 `;
 
 export const LeftPanel = styled.div`
+  ${glassPanel}
   flex: 1;
   max-width: 480px;
   display: flex;
@@ -19,21 +21,34 @@ export const LeftPanel = styled.div`
   justify-content: center;
   gap: 2rem;
   padding: 3rem;
+  margin: 1.5rem;
+  border-radius: ${({ theme }) => theme.radius.xl};
 
   @media (max-width: 768px) {
     max-width: 100%;
     padding: 2rem 1.5rem;
+    margin: 1rem;
   }
 `;
 
 export const RightPanel = styled.div`
   flex: 1;
-  background-color: ${({ theme }) => theme.colors.primary};
+  background: ${({ theme }) => theme.colors.gradientAI};
   display: flex;
   align-items: center;
   justify-content: center;
-  color: ${({ theme }) => theme.colors.textInverse};
+  color: ${({ theme }) => theme.colors.textOnPrimary};
   padding: 3rem;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, ${({ theme }) => theme.colors.glassHighlight} 0%, transparent 100%);
+    pointer-events: none;
+  }
 
   @media (max-width: 768px) {
     display: none;
@@ -55,20 +70,20 @@ export const Logo = styled.div`
   align-items: center;
   gap: 1rem;
   text-align: center;
-  color: ${({ theme }) => theme.colors.textInverse};
+  color: ${({ theme }) => theme.colors.textOnPrimary};
 `;
 
 export const Title = styled.h1`
   font-size: clamp(1.5rem, 2vw, 2rem);
   font-weight: 700;
   color: ${({ theme, $inverse }) =>
-    $inverse ? theme.colors.textInverse : theme.colors.text};
+    $inverse ? theme.colors.textOnPrimary : theme.colors.text};
 `;
 
 export const Subtitle = styled.p`
   font-size: 0.95rem;
   color: ${({ theme, $inverse }) =>
-    $inverse ? `rgba(242, 242, 235, 0.75)` : theme.colors.textMuted};
+    $inverse ? `${theme.colors.textOnPrimary}CC` : theme.colors.textMuted};
   line-height: 1.6;
   max-width: 36ch;
 `;
@@ -132,23 +147,17 @@ export const SuccessMessage = styled(motion.div)`
 `;
 
 export const SubmitButton = styled.button`
+  ${gradientPrimaryButton}
   margin-top: 0.5rem;
   padding: 0.875rem;
   border-radius: ${({ theme }) => theme.radius.md};
-  background-color: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.textInverse};
   font-size: 0.95rem;
   font-weight: 700;
   letter-spacing: 0.02em;
-  transition: ${({ theme }) => theme.transition};
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 48px;
-
-  &:hover:not(:disabled) {
-    background-color: ${({ theme }) => theme.colors.primaryHover};
-  }
 
   &:disabled {
     opacity: 0.6;
@@ -159,8 +168,8 @@ export const SubmitButton = styled.button`
 export const Spinner = styled.div`
   width: 20px;
   height: 20px;
-  border: 2px solid rgba(242, 242, 235, 0.3);
-  border-top-color: #F2F2EB;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
   border-radius: 50%;
   animation: ${spin} 0.7s linear infinite;
 `;

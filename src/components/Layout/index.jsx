@@ -3,9 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
-import { toggleTheme, toggleSidebar } from '../../store/uiSlice';
+import { setThemeMode, setThemePalette, toggleSidebar } from '../../store/uiSlice';
 import { logout } from '../../store/authSlice';
 import api from '../../services/api';
+import { themeModeOptions, themePaletteOptions } from '../../styles/theme';
 
 import {
   Wrapper,
@@ -18,7 +19,10 @@ import {
   Topbar,
   TopbarLeft,
   TopbarRight,
-  ThemeToggle,
+  FieldIcon,
+  ThemeField,
+  ThemeLabel,
+  ThemeSelect,
   UserMenu,
   UserName,
   PageContent,
@@ -46,7 +50,12 @@ export default function Layout({ children }) {
   const ui = useSelector((state) => state.ui || {});
   const auth = useSelector((state) => state.auth || {});
 
-  const themeMode = ui.themeMode || 'light';
+  const themePalette = themePaletteOptions.some((palette) => palette.value === ui.themePalette)
+    ? ui.themePalette
+    : 'emerald';
+  const themeMode = themeModeOptions.some((option) => option.value === ui.themeMode)
+    ? ui.themeMode
+    : 'dark';
   const sidebarOpen = !!ui.sidebarOpen;
   const user = auth.user || null;
   const refreshToken = auth.refreshToken || '';
@@ -81,20 +90,7 @@ export default function Layout({ children }) {
       <Sidebar $open={sidebarOpen}>
         <SidebarHeader>
           <BrandMark>
-            <span
-              style={{
-                width: 28,
-                height: 28,
-                borderRadius: 8,
-                background: 'rgba(1, 105, 111, 0.12)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: 700,
-              }}
-            >
-              F
-            </span>
+            <span className="brand-chip">F</span>
             Finance
           </BrandMark>
 
@@ -143,13 +139,35 @@ export default function Layout({ children }) {
           </TopbarLeft>
 
           <TopbarRight>
-            <ThemeToggle
-              onClick={() => dispatch(toggleTheme())}
-              aria-label="Alternar tema"
-              type="button"
-            >
-              {themeMode === 'dark' ? '☀' : '☾'}
-            </ThemeToggle>
+            <ThemeField>
+              <ThemeLabel aria-hidden="true" />
+              <ThemeSelect
+                aria-label="Selecionar paleta"
+                value={themePalette}
+                onChange={(event) => dispatch(setThemePalette(event.target.value))}
+              >
+                {themePaletteOptions.map((palette) => (
+                  <option key={palette.value} value={palette.value}>
+                    {palette.label}
+                  </option>
+                ))}
+              </ThemeSelect>
+            </ThemeField>
+
+            <ThemeField>
+              <FieldIcon aria-hidden="true">{themeMode === 'dark' ? '☾' : '☀'}</FieldIcon>
+              <ThemeSelect
+                aria-label="Selecionar modo de cor"
+                value={themeMode}
+                onChange={(event) => dispatch(setThemeMode(event.target.value))}
+              >
+                {themeModeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </ThemeSelect>
+            </ThemeField>
 
             <UserMenu>
               <UserName>{user?.nome?.split(' ')[0] ?? 'Usuário'}</UserName>

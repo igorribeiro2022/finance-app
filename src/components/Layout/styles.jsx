@@ -13,7 +13,8 @@ export const Overlay = styled.div`
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(38, 28, 20, 0.4);
+  background: ${({ theme }) => theme.colors.overlay};
+  backdrop-filter: blur(8px);
   z-index: 99;
 
   @media (max-width: 768px) {
@@ -24,8 +25,11 @@ export const Overlay = styled.div`
 export const Sidebar = styled.aside`
   width: ${SIDEBAR_WIDTH};
   min-height: 100dvh;
-  background-color: ${({ theme }) => theme.colors.surface};
-  border-right: 1px solid ${({ theme }) => theme.colors.divider};
+  background: ${({ theme }) => theme.colors.glassBgElevated};
+  border-right: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  box-shadow: ${({ theme }) => theme.colors.glassShadow};
+  backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  -webkit-backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
   display: flex;
   flex-direction: column;
   position: sticky;
@@ -48,16 +52,30 @@ export const SidebarHeader = styled.div`
   align-items: center;
   justify-content: space-between;
   padding: 1.5rem 1.25rem 1rem;
-  border-bottom: 1px solid ${({ theme }) => theme.colors.divider};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.glassBorder};
 `;
 
 export const BrandMark = styled.div`
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  color: ${({ theme }) => theme.colors.primary};
+  color: ${({ theme }) => theme.colors.text};
   font-weight: 700;
   font-size: 1.1rem;
+
+  .brand-chip {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: ${({ theme }) => theme.colors.primaryHighlight};
+    color: ${({ theme }) => theme.colors.primary};
+    border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    box-shadow: inset 0 1px 0 ${({ theme }) => theme.colors.glassHighlight};
+  }
 `;
 
 export const NavMenu = styled.ul`
@@ -103,7 +121,7 @@ export const NavItem = styled.li`
 
 export const SidebarFooter = styled.div`
   padding: 1rem 0.75rem;
-  border-top: 1px solid ${({ theme }) => theme.colors.divider};
+  border-top: 1px solid ${({ theme }) => theme.colors.glassBorder};
 `;
 
 export const LogoutButton = styled.button`
@@ -125,13 +143,15 @@ export const LogoutButton = styled.button`
 `;
 
 export const Topbar = styled.header`
-  height: 60px;
+  min-height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
-  background-color: ${({ theme }) => theme.colors.surface};
-  border-bottom: 1px solid ${({ theme }) => theme.colors.divider};
+  padding: 0.75rem 1.5rem;
+  background: ${({ theme }) => theme.colors.glassBg};
+  border-bottom: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  -webkit-backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
   position: sticky;
   top: 0;
   z-index: 50;
@@ -146,7 +166,9 @@ export const TopbarLeft = styled.div`
 export const TopbarRight = styled.div`
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 `;
 
 export const CollapseButton = styled.button`
@@ -166,20 +188,47 @@ export const CollapseButton = styled.button`
   }
 `;
 
-export const ThemeToggle = styled.button`
-  width: 36px;
-  height: 36px;
-  border-radius: ${({ theme }) => theme.radius.md};
+export const ThemeField = styled.label`
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-size: 1rem;
+  gap: 0.625rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: ${({ theme }) => theme.radius.md};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  box-shadow: inset 0 1px 0 ${({ theme }) => theme.colors.glassHighlight};
+`;
+
+export const ThemeLabel = styled.span`
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: ${({ theme }) => theme.colors.gradientCTA};
+  box-shadow: 0 0 0 3px ${({ theme }) => theme.colors.primaryHighlight};
+  flex-shrink: 0;
+`;
+
+export const FieldIcon = styled.span`
+  font-size: 0.8rem;
+  line-height: 1;
   color: ${({ theme }) => theme.colors.textMuted};
+  flex-shrink: 0;
+`;
+
+export const ThemeSelect = styled.select`
+  min-width: 108px;
+  border-radius: ${({ theme }) => theme.radius.md};
+  border: 1px solid transparent;
+  background: transparent;
+  color: ${({ theme }) => theme.colors.text};
+  padding: 0.25rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  outline: none;
   transition: ${({ theme }) => theme.transition};
 
-  &:hover {
-    background-color: ${({ theme }) => theme.colors.surfaceOffset};
-    color: ${({ theme }) => theme.colors.text};
+  &:focus {
+    border-color: ${({ theme }) => theme.colors.primary};
   }
 `;
 
@@ -187,6 +236,10 @@ export const UserMenu = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: ${({ theme }) => theme.radius.full};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
 `;
 
 export const UserName = styled.span`
@@ -199,6 +252,7 @@ export const PageContent = styled.main`
   flex: 1;
   padding: 2rem;
   overflow-y: auto;
+  position: relative;
 
   @media (max-width: 768px) {
     padding: 1.25rem 1rem;

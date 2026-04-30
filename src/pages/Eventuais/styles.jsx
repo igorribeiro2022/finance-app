@@ -1,4 +1,5 @@
 import styled, { keyframes } from 'styled-components';
+import { glassPanel, glassPanelElevated, gradientPrimaryButton } from '../../styles/mixins';
 
 const shimmer = keyframes`
   0% { background-position: -200% 0; }
@@ -42,27 +43,20 @@ export const PageSubtitle = styled.p`
 `;
 
 export const AddButton = styled.button`
+  ${gradientPrimaryButton}
   padding: 0.625rem 1.25rem;
   border-radius: ${({ theme }) => theme.radius.md};
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.textInverse};
   font-size: 0.875rem;
   font-weight: 600;
-  transition: ${({ theme }) => theme.transition};
-
-  &:hover {
-    background: ${({ theme }) => theme.colors.primaryHover};
-  }
 `;
 
 export const FiltersBar = styled.div`
+  ${glassPanelElevated}
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
   gap: 1rem;
   padding: 1rem 1.25rem;
   margin-bottom: 1rem;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.lg};
 `;
 
@@ -116,9 +110,8 @@ export const SummaryGrid = styled.div`
 `;
 
 export const SummaryCard = styled.div`
+  ${glassPanel}
   padding: 1rem 1.25rem;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.lg};
 `;
 
@@ -145,10 +138,9 @@ export const SummaryValue = styled.span`
 `;
 
 export const Table = styled.table`
+  ${glassPanel}
   width: 100%;
   margin-top: 1.25rem;
-  background: ${({ theme }) => theme.colors.surface};
-  border: 1px solid ${({ theme }) => theme.colors.border};
   border-radius: ${({ theme }) => theme.radius.lg};
   overflow: hidden;
 `;
@@ -261,15 +253,16 @@ export const Modal = styled.div`
 export const ModalOverlay = styled.div`
   position: absolute;
   inset: 0;
-  background: rgba(38, 28, 20, 0.5);
+  background: ${({ theme }) => theme.colors.overlay};
+  backdrop-filter: blur(10px);
 `;
 
 export const ModalBox = styled.div`
+  ${glassPanelElevated}
   position: relative;
   z-index: 1;
   width: 100%;
   max-width: 560px;
-  background: ${({ theme }) => theme.colors.surface};
   border-radius: ${({ theme }) => theme.radius.xl};
   box-shadow: 0 20px 60px ${({ theme }) => theme.colors.shadowLg};
   overflow: hidden;
@@ -407,22 +400,16 @@ export const CancelBtn = styled.button`
 `;
 
 export const SubmitButton = styled.button`
+  ${gradientPrimaryButton}
   padding: 0.625rem 1.5rem;
   border-radius: ${({ theme }) => theme.radius.md};
-  background: ${({ theme }) => theme.colors.primary};
-  color: ${({ theme }) => theme.colors.textInverse};
   font-size: 0.875rem;
   font-weight: 700;
-  transition: ${({ theme }) => theme.transition};
   display: flex;
   align-items: center;
   gap: 0.5rem;
   min-width: 130px;
   justify-content: center;
-
-  &:hover:not(:disabled) {
-    background: ${({ theme }) => theme.colors.primaryHover};
-  }
 
   &:disabled {
     opacity: 0.6;
@@ -433,8 +420,8 @@ export const SubmitButton = styled.button`
 export const Spinner = styled.div`
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(242, 242, 235, 0.3);
-  border-top-color: #F2F2EB;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
   border-radius: 50%;
   animation: ${spin} 0.7s linear infinite;
 `;
@@ -455,9 +442,9 @@ export const ErrorMessage = styled.span`
 `;
 
 export const DeleteConfirm = styled.div`
+  ${glassPanelElevated}
   position: relative;
   z-index: 1;
-  background: ${({ theme }) => theme.colors.surface};
   border-radius: ${({ theme }) => theme.radius.xl};
   padding: 2rem;
   max-width: 400px;
@@ -487,7 +474,7 @@ export const DangerBtn = styled.button`
   padding: 0.625rem 1.5rem;
   border-radius: ${({ theme }) => theme.radius.md};
   background: ${({ theme }) => theme.colors.error};
-  color: #fff;
+  color: ${({ theme }) => theme.colors.textOnError};
   font-size: 0.875rem;
   font-weight: 700;
   transition: ${({ theme }) => theme.transition};

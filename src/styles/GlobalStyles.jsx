@@ -22,8 +22,15 @@ const GlobalStyles = createGlobalStyle`
     font-size: 1rem;
     line-height: 1.6;
     background-color: ${({ theme }) => theme.colors.bg};
+    background-image: ${({ theme }) => theme.colors.pageGradient};
+    background-attachment: fixed;
+    background-blend-mode: screen, screen, normal;
     color: ${({ theme }) => theme.colors.text};
-    transition: background-color 300ms ease, color 300ms ease;
+    transition: background-color 300ms ease, color 300ms ease, background-image 300ms ease;
+    min-height: 100dvh;
+  }
+
+  #root {
     min-height: 100dvh;
   }
 
@@ -60,9 +67,23 @@ const GlobalStyles = createGlobalStyle`
   }
 
   a {
-    color: inherit;
+    color: ${({ theme }) => theme.colors.link};
     text-decoration: none;
     transition: ${({ theme }) => theme.transition};
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: ${({ theme }) => theme.colors.surface};
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radius.full};
   }
 
   ::selection {
