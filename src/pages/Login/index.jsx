@@ -1,12 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { useDispatch } from 'react-redux';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { setCredentials } from '../../store/authSlice';
 import api from '../../services/api';
+import { postAceitarConviteComAccess } from '../../services/casa';
+import {
+  clearCasaInviteToken,
+  getCasaInviteToken,
+  saveCasaInviteToken,
+} from '../../utils/casaInvite';
 import {
   Container, LeftPanel, RightPanel,
   Logo, Title, Subtitle,
@@ -23,8 +29,14 @@ const schema = yup.object({
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [apiError, setApiError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const conviteToken = useMemo(() => getCasaInviteToken(searchParams), [searchParams]);
+
+  useEffect(() => {
+    if (conviteToken) saveCasaInviteToken(conviteToken);
+  }, [conviteToken]);
 
   const {
     register,
@@ -36,6 +48,19 @@ export default function Login() {
     setApiError('');
     try {
       const response = await api.post('/auth/login/', data);
+      if (conviteToken) {
+        try {
+          await postAceitarConviteComAccess(conviteToken, response.data.access);
+          clearCasaInviteToken();
+        } catch {
+          clearCasaInviteToken();
+        }
+
+        dispatch(setCredentials(response.data));
+        navigate('/casa');
+        return;
+      }
+
       dispatch(setCredentials(response.data));
       navigate('/');
     } catch (err) {
@@ -116,7 +141,10 @@ export default function Login() {
         </Form>
 
         <FooterText>
-          Não tem uma conta? <Link to="/cadastro">Criar conta</Link>
+          Não tem uma conta?{' '}
+          <Link to={conviteToken ? `/cadastro?convite=${encodeURIComponent(conviteToken)}` : '/cadastro'}>
+            Criar conta
+          </Link>
         </FooterText>
       </LeftPanel>
 

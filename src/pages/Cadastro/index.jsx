@@ -1,10 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
-import { useNavigate, Link } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { setCredentials } from '../../store/authSlice';
 import api from '../../services/api';
+import { postAceitarConviteComAccess } from '../../services/casa';
+import {
+  clearCasaInviteToken,
+  getCasaInviteToken,
+  saveCasaInviteToken,
+} from '../../utils/casaInvite';
 import {
   Container, LeftPanel, RightPanel,
   BrandMark, Logo, Title, Subtitle,
@@ -24,11 +32,19 @@ const schema = yup.object({
 });
 
 export default function Cadastro() {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [apiError, setApiError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showPassword2, setShowPassword2] = useState(false);
+  const conviteToken = useMemo(() => getCasaInviteToken(searchParams), [searchParams]);
+
+  useEffect(() => {
+    if (conviteToken) saveCasaInviteToken(conviteToken);
+  }, [conviteToken]);
 
   const {
     register,
@@ -40,10 +56,35 @@ export default function Cadastro() {
     setApiError('');
     try {
       await api.post('/auth/register/', data);
+      if (conviteToken) {
+        const loginResponse = await api.post('/auth/login/', {
+          email: data.email,
+          password: data.password,
+        });
+
+        try {
+          await postAceitarConviteComAccess(conviteToken, loginResponse.data.access);
+        } catch (inviteErr) {
+          const msg = inviteErr.response?.data?.detail || 'Convite inválido ou expirado.';
+          setApiError(`Conta criada, mas não foi possível aceitar o convite: ${msg}`);
+          setTimeout(() => navigate(`/login?convite=${encodeURIComponent(conviteToken)}`), 3000);
+          return;
+        }
+
+        clearCasaInviteToken();
+        dispatch(setCredentials(loginResponse.data));
+        setSuccessMessage('Conta criada e convite aceito! Redirecionando para sua Casa...');
+        setSuccess(true);
+        setTimeout(() => navigate('/casa'), 1000);
+        return;
+      }
+
+      setSuccessMessage('Conta criada com sucesso! Redirecionando para o login...');
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err) {
       const msg = err.response?.data?.email?.[0]
+        || err.response?.data?.email_convidado?.[0]
         || err.response?.data?.detail
         || 'Erro ao criar conta. Tente novamente.';
       setApiError(msg);
@@ -93,7 +134,7 @@ export default function Cadastro() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            ✓ Conta criada com sucesso! Redirecionando para o login...
+            {successMessage}
           </SuccessMessage>
         ) : (
           <Form onSubmit={handleSubmit(onSubmit)}>
@@ -168,7 +209,10 @@ export default function Cadastro() {
         )}
 
         <FooterText>
-          Já tem uma conta? <Link to="/login">Entrar</Link>
+          Já tem uma conta?{' '}
+          <Link to={conviteToken ? `/login?convite=${encodeURIComponent(conviteToken)}` : '/login'}>
+            Entrar
+          </Link>
         </FooterText>
       </LeftPanel>
 

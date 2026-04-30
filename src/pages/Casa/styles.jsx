@@ -15,7 +15,9 @@ const spin = keyframes`to { transform: rotate(360deg); }`;
 /* ── layout base ────────────────────────────────────────────── */
 export const PageWrapper = styled.div`
   padding: 1.5rem 2rem 3rem;
+  width: 100%;
   max-width: 1200px;
+  margin: 0 auto;
   animation: ${fadeUp} 0.25s ease;
   @media (max-width: 768px) { padding: 1rem; }
 `;
@@ -588,6 +590,44 @@ export const SuccessBanner = styled.div`
 `;
 
 /* ── modal ──────────────────────────────────────────────────── */
+export const InviteLinkPanel = styled.div`
+  padding: 0.85rem 1rem;
+  background: ${({ theme }) => `${theme.colors.success}12`};
+  border: 1px solid ${({ theme }) => `${theme.colors.success}33`};
+  border-radius: 8px;
+  color: ${({ theme }) => theme.text};
+  font-size: 0.875rem;
+  margin-bottom: 1rem;
+`;
+
+export const InviteLinkText = styled.div`
+  color: ${({ theme }) => theme.textMuted};
+  line-height: 1.45;
+  margin-bottom: 0.65rem;
+`;
+
+export const InviteLinkActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  @media (max-width: 640px) {
+    align-items: stretch;
+    flex-direction: column;
+  }
+`;
+
+export const InviteLinkInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 8px;
+  background: ${({ theme }) => theme.surfaceOffset};
+  color: ${({ theme }) => theme.text};
+  font-size: 0.8rem;
+`;
+
 export const ModalOverlay = styled.div`
   position: fixed;
   inset: 0;

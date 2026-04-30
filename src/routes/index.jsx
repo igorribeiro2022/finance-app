@@ -13,6 +13,7 @@ import VistaBancaria from '../pages/VistaBancaria';
 import Casa from '../pages/Casa';
 import OpenFinance from '../pages/OpenFinance';
 import Categorias from '../pages/Categorias';
+import ConviteCasa from '../pages/ConviteCasa';
 import Login from '../pages/Login';
 import Cadastro from '../pages/Cadastro';
 
@@ -61,6 +62,8 @@ function AppRoutes() {
           </PublicOnlyRoute>
         }
       />
+
+      <Route path="/convite-casa/:token" element={<ConviteCasa />} />
 
       <Route element={<PrivateLayout />}>
         <Route path="/" element={<Dashboard />} />

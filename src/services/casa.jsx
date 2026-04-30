@@ -9,6 +9,14 @@ export const getCasaMetas       = ()         => api.get('/casa/metas/');
 export const postCasaMeta       = (body)     => api.post('/casa/metas/', body);
 export const patchCasaMeta      = (id, body) => api.patch(`/casa/metas/${id}/`, body);
 export const deleteCasaMeta     = (id)       => api.delete(`/casa/metas/${id}/`);
-export const postConvite        = (body)     => api.post('/casa/convite/', body);
+export const postConvite        = (body)     => api.post('/casa/convite/', {
+  email_convidado: body.email_convidado ?? body.email,
+});
 export const postAceitarConvite = (token)    => api.post(`/casa/convite/${token}/aceitar/`);
+export const postAceitarConviteComAccess = (token, accessToken) =>
+  api.post(
+    `/casa/convite/${token}/aceitar/`,
+    {},
+    { headers: { Authorization: `Bearer ${accessToken}` } }
+  );
 export const deleteCasaMembro   = (id)       => api.delete(`/casa/membros/${id}/`);

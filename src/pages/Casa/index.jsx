@@ -5,6 +5,7 @@ import {
   getCasaDashboard, getCasaMetas, postCasaMeta,
   patchCasaMeta, deleteCasaMeta, postConvite, deleteCasaMembro,
 } from '../../services/casa';
+import { buildCasaInviteUrl } from '../../utils/casaInvite';
 import {
   PageWrapper, PageHeader, HeaderInfo, PageTitle, PageSubtitle, HeaderActions,
   TabBar, Tab, Card, CardHeader, CardTitle,
@@ -19,6 +20,7 @@ import {
   EmptyState, EmptyIcon, EmptyTitle, EmptyDesc,
   PrimaryBtn, SecondaryBtn, DangerBtn, GhostBtn, SpinnerIcon, SkeletonBlock,
   ErrorBanner, SuccessBanner,
+  InviteLinkPanel, InviteLinkText, InviteLinkActions, InviteLinkInput,
   ModalOverlay, ModalBox, ModalTitle, ModalText, ModalActions,
   FormGroup, FormLabel, FormInput,
 } from './styles';
@@ -133,6 +135,7 @@ export default function Casa() {
   /* feedback */
   const [error,   setError]   = useState('');
   const [success, setSuccess] = useState('');
+  const [inviteLink, setInviteLink] = useState('');
 
   /* modais */
   const [showCriarModal,   setShowCriarModal]   = useState(false);
@@ -263,17 +266,33 @@ export default function Casa() {
     try {
       setSavingConvite(true);
       setError('');
-      await postConvite({ email: emailConvite.trim() });
+      setInviteLink('');
+      const res = await postConvite({ email_convidado: emailConvite.trim() });
+      const link = buildCasaInviteUrl(res.data?.token);
       setShowConviteModal(false);
       setEmailConvite('');
-      setSuccess('Convite enviado com sucesso!');
+      setInviteLink(link);
+      setSuccess(link ? 'Convite criado com sucesso!' : 'Convite enviado com sucesso!');
     } catch (e) {
-      const msg = e?.response?.data?.email?.[0] ?? e?.response?.data?.detail ?? 'Erro ao enviar convite.';
+      const msg = e?.response?.data?.email_convidado?.[0]
+        ?? e?.response?.data?.email?.[0]
+        ?? e?.response?.data?.detail
+        ?? 'Erro ao enviar convite.';
       setError(msg);
     } finally {
       setSavingConvite(false);
     }
   }, [emailConvite]);
+
+  const handleCopiarConvite = useCallback(async () => {
+    if (!inviteLink) return;
+    try {
+      await navigator.clipboard.writeText(inviteLink);
+      setSuccess('Link do convite copiado!');
+    } catch {
+      setError('Não foi possível copiar o link automaticamente.');
+    }
+  }, [inviteLink]);
 
   /* ── remover membro ────────────────────────────────────────── */
   const handleRemoverMembro = useCallback(async () => {
@@ -604,6 +623,25 @@ export default function Casa() {
 
       {error   && <ErrorBanner>{error}</ErrorBanner>}
       {success && <SuccessBanner>{success}</SuccessBanner>}
+      {inviteLink && (
+        <InviteLinkPanel>
+          <InviteLinkText>
+            Envie este link para a pessoa convidada. Se ela ainda não tiver conta,
+            poderá criar uma conta pelo link e entrar direto na sua Casa.
+          </InviteLinkText>
+          <InviteLinkActions>
+            <InviteLinkInput
+              value={inviteLink}
+              readOnly
+              onFocus={(event) => event.target.select()}
+              aria-label="Link do convite"
+            />
+            <SecondaryBtn type="button" onClick={handleCopiarConvite}>
+              Copiar link
+            </SecondaryBtn>
+          </InviteLinkActions>
+        </InviteLinkPanel>
+      )}
 
       {loadingCasa ? (
         <SkeletonCard rows={4} />
@@ -674,7 +712,7 @@ export default function Casa() {
           <ModalBox onClick={(e) => e.stopPropagation()}>
             <ModalTitle>Convidar membro</ModalTitle>
             <ModalText>
-              Informe o e-mail da pessoa. Ela receberá um convite para entrar em{' '}
+              Informe o e-mail da pessoa para gerar o convite de entrada em{' '}
               <strong>{casa?.nome}</strong>.
             </ModalText>
             <FormGroup>
