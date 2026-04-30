@@ -17,11 +17,15 @@ const spin = keyframes`
 
 /* ── Layout base ─────────────────────────────────────────────────── */
 export const PageWrapper = styled.div`
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
   animation: ${fadeIn} 0.3s ease;
   position: relative;
+  overflow-x: hidden;
 `;
 
 export const PageHeader = styled.div`
@@ -54,6 +58,7 @@ export const HeaderActions = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  flex-wrap: wrap;
 `;
 
 /* ── Tabs ────────────────────────────────────────────────────────── */
@@ -454,6 +459,10 @@ export const TransactionIcon = styled.div`
   align-items: center;
   justify-content: center;
   font-size: 15px;
+  color: ${({ type, theme }) =>
+    type === 'credito' || type === 'transfer_in'
+      ? theme.colors.success
+      : theme.colors.primary};
   flex-shrink: 0;
 `;
 
@@ -675,6 +684,9 @@ export const EmptyState = styled.div`
 `;
 
 export const EmptyIcon = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 36px;
   opacity: 0.5;
 `;
@@ -868,7 +880,11 @@ export const CategoryName = styled.div`
 `;
 
 export const CategoryEmoji = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   font-size: 16px;
+  color: ${({ theme }) => theme.colors.primary};
 `;
 
 export const CategoryAmount = styled.p`

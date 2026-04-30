@@ -6,160 +6,264 @@ const shimmer = keyframes`
   100% { background-position: 200% 0; }
 `;
 
+export const DashboardShell = styled.div`
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  overflow-x: hidden;
+`;
+
+export const HeroPanel = styled.section`
+  ${glassPanelElevated}
+  position: relative;
+  overflow: hidden;
+  border-radius: 28px;
+  padding: clamp(1rem, 2.5vw, 1.75rem);
+  background-image:
+    radial-gradient(circle at 12% 88%, ${({ theme }) => `${theme.colors.accent}22`} 0%, transparent 28%),
+    radial-gradient(circle at 84% 16%, ${({ theme }) => `${theme.colors.primary}24`} 0%, transparent 30%),
+    linear-gradient(135deg, ${({ theme }) => theme.colors.glassBgElevated}, ${({ theme }) => theme.colors.surface});
+`;
+
 export const PageHeader = styled.div`
-  margin-bottom: 2rem;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  flex-wrap: wrap;
 `;
 
 export const PageTitle = styled.h1`
-  font-size: clamp(1.25rem, 2vw, 1.75rem);
-  font-weight: 700;
+  font-size: clamp(1.35rem, 2.6vw, 2rem);
+  font-weight: 900;
   color: ${({ theme }) => theme.colors.text};
 `;
 
 export const PageSubtitle = styled.p`
-  font-size: 0.9rem;
   color: ${({ theme }) => theme.colors.textMuted};
-  margin-top: 0.25rem;
+  font-size: 0.9rem;
+`;
+
+export const DashboardGrid = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1.55fr) minmax(280px, 0.75fr);
+  gap: 1rem;
+
+  @media (max-width: 1040px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const MainColumn = styled.div`
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+`;
+
+export const SideColumn = styled.div`
+  display: grid;
+  gap: 1rem;
+  min-width: 0;
+`;
+
+export const BalanceCard = styled.div`
+  ${glassPanel}
+  border-radius: 24px;
+  padding: clamp(1rem, 2vw, 1.4rem);
+  min-height: 210px;
+`;
+
+export const BalanceLabel = styled.div`
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-weight: 800;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+`;
+
+export const BalanceValue = styled.div`
+  color: ${({ theme, $negative }) => $negative ? theme.colors.error : theme.colors.text};
+  font-size: clamp(2.1rem, 6vw, 4rem);
+  line-height: 1;
+  font-weight: 950;
+  letter-spacing: -0.08em;
+  margin: 0.6rem 0 1rem;
+`;
+
+export const QuickActions = styled.div`
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+`;
+
+export const QuickPill = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 0.8rem;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.surfaceOffset};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.82rem;
+  font-weight: 800;
 `;
 
 export const KpiGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+
+  @media (max-width: 860px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  @media (max-width: 480px) {
+    grid-template-columns: 1fr;
+  }
 `;
 
 export const KpiCard = styled.div`
   ${glassPanel}
-  border-radius: ${({ theme }) => theme.radius.lg};
-  padding: 1.25rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  box-shadow: 0 1px 3px ${({ theme }) => theme.colors.shadow};
-  transition: ${({ theme }) => theme.transition};
-
-  &:hover {
-    box-shadow: 0 4px 12px ${({ theme }) => theme.colors.shadowMd};
-    transform: translateY(-1px);
-  }
+  border-radius: 20px;
+  padding: 1rem;
+  min-width: 0;
 `;
 
-export const KpiIcon = styled.span`
-  font-size: 1.1rem;
-  color: ${({ theme, $type }) =>
-    $type === 'income' ? theme.colors.success :
-    $type === 'expense' ? theme.colors.error :
-    theme.colors.textMuted};
-`;
-
-export const KpiLabel = styled.span`
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.textMuted};
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-`;
-
-export const KpiValue = styled.span`
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: ${({ theme, $type }) =>
-    $type === 'income' ? theme.colors.success :
-    $type === 'expense' ? theme.colors.error :
-    theme.colors.text};
-  font-variant-numeric: tabular-nums;
-`;
-
-export const ChartsGrid = styled.div`
+export const KpiIcon = styled.div`
+  width: 36px;
+  height: 36px;
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
+  place-items: center;
+  border-radius: 12px;
+  background: ${({ theme, $type }) =>
+    $type === 'income' ? `${theme.colors.success}18`
+    : $type === 'expense' ? `${theme.colors.error}18`
+    : theme.colors.primaryHighlight};
+  color: ${({ theme, $type }) =>
+    $type === 'income' ? theme.colors.success
+    : $type === 'expense' ? theme.colors.error
+    : theme.colors.primary};
+  margin-bottom: 0.7rem;
+`;
+
+export const KpiLabel = styled.div`
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.72rem;
+  font-weight: 800;
+`;
+
+export const KpiValue = styled.div`
+  color: ${({ theme, $type }) =>
+    $type === 'income' ? theme.colors.success
+    : $type === 'expense' ? theme.colors.error
+    : theme.colors.text};
+  font-size: 1.2rem;
+  font-weight: 900;
+  font-variant-numeric: tabular-nums;
 `;
 
 export const ChartCard = styled.div`
-  ${glassPanelElevated}
-  border-radius: ${({ theme }) => theme.radius.lg};
-  padding: 1.25rem;
-  box-shadow: 0 1px 3px ${({ theme }) => theme.colors.shadow};
-  grid-column: ${({ $wide }) => $wide ? '1 / -1' : 'auto'};
+  ${glassPanel}
+  border-radius: 24px;
+  padding: 1rem;
+  min-width: 0;
 `;
 
-export const ChartTitle = styled.h3`
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.textMuted};
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 1rem;
-`;
-
-export const AgendaCard = styled.div`
-  ${glassPanelElevated}
-  border-radius: ${({ theme }) => theme.radius.lg};
-  padding: 1.25rem;
-  box-shadow: 0 1px 3px ${({ theme }) => theme.colors.shadow};
-`;
-
-export const AgendaTitle = styled.h3`
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: ${({ theme }) => theme.colors.textMuted};
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: 1rem;
-`;
-
-export const AgendaList = styled.ul`
+export const ChartHeader = styled.div`
   display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-`;
-
-export const AgendaItem = styled.li`
-  display: flex;
-  align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1rem;
-  border-radius: ${({ theme }) => theme.radius.md};
-  background-color: ${({ theme, $type }) =>
-    $type === 'income'
-      ? `rgba(40, 191, 17, 0.06)`
-      : `rgba(217, 7, 7, 0.06)`};
-  border: 1px solid ${({ theme, $type }) =>
-    $type === 'income'
-      ? `rgba(40, 191, 17, 0.15)`
-      : `rgba(217, 7, 7, 0.15)`};
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 0.75rem;
 `;
 
-export const AgendaInfo = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-`;
-
-export const AgendaDesc = styled.span`
-  font-size: 0.9rem;
-  font-weight: 500;
+export const ChartTitle = styled.h2`
+  font-size: 1rem;
+  font-weight: 900;
   color: ${({ theme }) => theme.colors.text};
 `;
 
-export const AgendaDate = styled.span`
-  font-size: 0.75rem;
-  font-weight: 600;
-  color: ${({ $proximity }) =>
-    $proximity === 'Hoje' ? '#D90707' :
-    $proximity === 'Amanhã' ? '#A6806A' :
-    '#593D2D'};
+export const Muted = styled.span`
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.78rem;
 `;
 
-export const AgendaValue = styled.span`
-  font-size: 0.95rem;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: ${({ theme, $type }) =>
-    $type === 'income' ? theme.colors.success : theme.colors.error};
+export const SideCard = styled.div`
+  ${glassPanel}
+  border-radius: 24px;
+  padding: 1rem;
+`;
+
+export const Gauge = styled.div`
+  width: 172px;
+  height: 92px;
+  margin: 1rem auto 0.25rem;
+  border-radius: 180px 180px 0 0;
+  background:
+    radial-gradient(circle at bottom, ${({ theme }) => theme.colors.surface} 0 52%, transparent 53%),
+    conic-gradient(from 225deg, ${({ theme }) => theme.colors.success} 0deg, ${({ theme }) => theme.colors.warning} ${({ $value }) => Math.min($value * 1.8, 180)}deg, ${({ theme }) => theme.colors.surfaceOffset} 0deg);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+`;
+
+export const GaugeValue = styled.div`
+  transform: translateY(14px);
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 2rem;
+  font-weight: 950;
+`;
+
+export const AgendaList = styled.div`
+  display: grid;
+  gap: 0.55rem;
+`;
+
+export const AgendaItem = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.65rem;
+  border-radius: 14px;
+  background: ${({ theme }) => theme.colors.surfaceOffset};
+`;
+
+export const AgendaIcon = styled.div`
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: ${({ theme, $type }) => $type === 'income' ? `${theme.colors.success}16` : `${theme.colors.error}16`};
+  color: ${({ theme, $type }) => $type === 'income' ? theme.colors.success : theme.colors.error};
+`;
+
+export const AgendaInfo = styled.div`
+  min-width: 0;
+  flex: 1;
+`;
+
+export const AgendaDesc = styled.div`
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.86rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const AgendaDate = styled.div`
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.72rem;
+`;
+
+export const AgendaValue = styled.div`
+  color: ${({ theme, $type }) => $type === 'income' ? theme.colors.success : theme.colors.error};
+  font-size: 0.82rem;
+  font-weight: 900;
+  white-space: nowrap;
 `;
 
 export const EmptyState = styled.div`
@@ -178,12 +282,8 @@ export const SkeletonCard = styled.div`
   );
   background-size: 200% 100%;
   animation: ${shimmer} 1.5s ease-in-out infinite;
-  border-radius: ${({ theme }) => theme.radius.lg};
-  padding: 1.25rem;
-  height: ${({ $tall }) => $tall ? '280px' : '100px'};
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
+  border-radius: 24px;
+  min-height: ${({ $tall }) => $tall ? '260px' : '118px'};
 `;
 
 export const SkeletonText = styled.div`
@@ -202,10 +302,4 @@ export const ErrorBanner = styled.div`
   font-size: 0.875rem;
   font-weight: 500;
   margin-bottom: 1.5rem;
-`;
-
-export const KpiDelta = styled.span`
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: ${({ $positive, theme }) => $positive ? theme.colors.success : theme.colors.error};
 `;

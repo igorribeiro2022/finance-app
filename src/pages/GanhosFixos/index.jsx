@@ -4,6 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import Icon from '../../components/Icon';
 import {
   getGanhosFixos,
   createGanhoFixo,
@@ -303,7 +304,7 @@ export default function GanhosFixos() {
             <PageTitle>Ganhos Fixos</PageTitle>
             <PageSubtitle>Receitas recorrentes mensais.</PageSubtitle>
           </div>
-          <AddButton onClick={openCreate}>+ Novo ganho</AddButton>
+          <AddButton onClick={openCreate}><Icon name="plus" size={16} /> Novo ganho</AddButton>
         </HeaderRow>
 
         <TotalBar>
@@ -378,10 +379,10 @@ export default function GanhosFixos() {
                 <Td $income>{formatCurrency(item.valor)}</Td>
                 <Td>
                   <ActionBtn onClick={() => openEdit(item)} title="Editar">
-                    ✎
+                    <Icon name="edit" size={16} />
                   </ActionBtn>
                   <ActionBtn $danger onClick={() => setDeleteTarget(item)} title="Excluir">
-                    ✕
+                    <Icon name="trash" size={16} />
                   </ActionBtn>
                 </Td>
               </Tr>
@@ -408,7 +409,7 @@ export default function GanhosFixos() {
             >
               <ModalHeader>
                 <ModalTitle>{editing ? 'Editar ganho fixo' : 'Novo ganho fixo'}</ModalTitle>
-                <CloseBtn onClick={closeModal}>✕</CloseBtn>
+                <CloseBtn onClick={closeModal}><Icon name="close" size={16} /></CloseBtn>
               </ModalHeader>
 
               {loadingCategorias ? (

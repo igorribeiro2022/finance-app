@@ -16,8 +16,9 @@ const spin = keyframes`to { transform: rotate(360deg); }`;
 export const PageWrapper = styled.div`
   padding: 1.5rem 2rem 3rem;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1360px;
   margin: 0 auto;
+  overflow-x: hidden;
   animation: ${fadeUp} 0.25s ease;
   @media (max-width: 768px) { padding: 1rem; }
 `;
@@ -194,9 +195,12 @@ export const InsightHero = styled.div`
   align-items: flex-start;
   gap: 1rem;
   padding: 1.25rem;
-  border-radius: 12px;
+  border-radius: 28px;
   margin-bottom: 1.5rem;
-  background-image: ${({ theme }) => theme.colors.gradientAI};
+  background-image:
+    radial-gradient(circle at 15% 80%, ${({ theme }) => `${theme.colors.accent}22`} 0%, transparent 28%),
+    radial-gradient(circle at 90% 10%, ${({ theme }) => `${theme.colors.primary}24`} 0%, transparent 30%),
+    ${({ theme }) => theme.colors.gradientAI};
 `;
 
 export const InsightIcon = styled.div`

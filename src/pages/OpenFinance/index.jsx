@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import Icon from '../../components/Icon';
 import api from '../../services/api';
 import {
   getBanks,
@@ -64,29 +65,31 @@ function formatDateGroupLabel(iso) {
   return d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
 }
 
-const CATEGORY_EMOJI = {
-  Transporte: '🚗',
-  Alimentação: '🍔',
-  Restaurantes: '🍽️',
-  Supermercado: '🛒',
-  Eletrônicos: '💻',
-  Empréstimos: '💰',
-  Transferências: '↔️',
-  Saúde: '🏥',
-  Educação: '📚',
-  Lazer: '🎮',
-  Moradia: '🏠',
-  Assinaturas: '🔁',
-  Estorno: '↩️',
-  Outros: '📦',
+const CATEGORY_ICON_NAMES = {
+  Transporte: 'card',
+  Alimentação: 'wallet',
+  Restaurantes: 'wallet',
+  Supermercado: 'wallet',
+  Eletrônicos: 'card',
+  Empréstimos: 'bank',
+  Transferências: 'openFinance',
+  Saúde: 'alert',
+  Educação: 'categories',
+  Lazer: 'event',
+  Moradia: 'home',
+  Assinaturas: 'event',
+  Estorno: 'trend',
+  Outros: 'categories',
 };
 
-function getCategoryEmoji(cat) {
-  if (!cat) return '📦';
-  for (const key of Object.keys(CATEGORY_EMOJI)) {
-    if (cat.toLowerCase().includes(key.toLowerCase())) return CATEGORY_EMOJI[key];
+function getCategoryIcon(cat, size = 16) {
+  if (!cat) return <Icon name="categories" size={size} />;
+  for (const key of Object.keys(CATEGORY_ICON_NAMES)) {
+    if (cat.toLowerCase().includes(key.toLowerCase())) {
+      return <Icon name={CATEGORY_ICON_NAMES[key]} size={size} />;
+    }
   }
-  return '📦';
+  return <Icon name="categories" size={size} />;
 }
 
 const ACCOUNT_TYPE_LABEL = {
@@ -303,7 +306,7 @@ function loadPluggyScript() {
       return;
     }
     const script = document.createElement('script');
-    // ✅ URL corrigida — /latest/ no lugar de /v2/
+    // URL corrigida: /latest/ no lugar de /v2/.
     script.src = 'https://cdn.pluggy.ai/pluggy-connect/latest/pluggy-connect.js';
     script.setAttribute('data-pluggy', 'true');
     script.onload = resolve;
@@ -497,7 +500,7 @@ export default function OpenFinance() {
         },
       });
 
-      // ✅ .init() renderiza o widget no body
+      // .init() renderiza o widget no body.
     await pluggyConnect.init();
 
     } catch (err) {
@@ -651,18 +654,18 @@ export default function OpenFinance() {
   const insight = useMemo(() => {
     if (gastoMes === 0) {
       return {
-        title: `Olá, ${userName}! Seus dados estão sendo carregados. 👋`,
+        title: `Ola, ${userName}! Seus dados estao sendo carregados.`,
         desc: 'Conecte seu banco para começar a acompanhar suas finanças em tempo real.',
       };
     }
     if (topCategory !== '-') {
       return {
-        title: `${userName}, sua maior despesa este mês é em ${topCategory}. 📊`,
+        title: `${userName}, sua maior despesa este mes e em ${topCategory}.`,
         desc: `Você já gastou ${formatBRL(gastoMes)} em ${new Date().toLocaleDateString('pt-BR', { month: 'long' })}. Fique de olho nos seus padrões de consumo.`,
       };
     }
     return {
-      title: `Tudo certo, ${userName}! Continue acompanhando suas finanças. ✅`,
+      title: `Tudo certo, ${userName}! Continue acompanhando suas finanças.`,
       desc: `Saldo consolidado de ${formatBRL(totalBalance)} em ${accounts.length} conta${accounts.length !== 1 ? 's' : ''} conectada${accounts.length !== 1 ? 's' : ''}.`,
     };
   }, [userName, gastoMes, topCategory, totalBalance, accounts]);
@@ -673,7 +676,7 @@ export default function OpenFinance() {
   const renderOverview = () => (
     <>
       <InsightHero>
-        <InsightIcon>💡</InsightIcon>
+        <InsightIcon><Icon name="trend" size={28} /></InsightIcon>
         <InsightText>
           <InsightTitle>{insight.title}</InsightTitle>
           <InsightDescription>{insight.desc}</InsightDescription>
@@ -691,7 +694,7 @@ export default function OpenFinance() {
         <KpiCard>
           <KpiLabel>Maior categoria</KpiLabel>
           <KpiValue style={{ fontSize: 'var(--text-lg, 1.25rem)' }}>
-            {getCategoryEmoji(topCategory)} {topCategory}
+            {getCategoryIcon(topCategory, 18)} {topCategory}
           </KpiValue>
         </KpiCard>
         <KpiCard>
@@ -715,7 +718,7 @@ export default function OpenFinance() {
             <SkeletonCard rows={2} />
           ) : accounts.length === 0 ? (
             <EmptyState>
-              <EmptyIcon>🏦</EmptyIcon>
+              <EmptyIcon><Icon name="bank" size={36} /></EmptyIcon>
               <EmptyTitle>Nenhuma conta conectada</EmptyTitle>
               <EmptyDesc>Conecte seu banco via Open Finance para ver seus saldos aqui.</EmptyDesc>
             </EmptyState>
@@ -803,7 +806,7 @@ export default function OpenFinance() {
             <SkeletonCard rows={4} />
           ) : groupedTransactions.length === 0 ? (
             <EmptyState>
-              <EmptyIcon>📋</EmptyIcon>
+              <EmptyIcon><Icon name="categories" size={36} /></EmptyIcon>
               <EmptyTitle>Nenhuma transação encontrada</EmptyTitle>
               <EmptyDesc>Sincronize sua conta para importar as movimentações.</EmptyDesc>
             </EmptyState>
@@ -816,7 +819,7 @@ export default function OpenFinance() {
                     <TransactionItem key={t.id}>
                       <TransactionLeft>
                         <TransactionIcon type={t.tipo}>
-                          {getCategoryEmoji(t.categoria)}
+                          {getCategoryIcon(t.categoria)}
                         </TransactionIcon>
                         <div style={{ minWidth: 0 }}>
                           <TransactionDesc>{t.descricao}</TransactionDesc>
@@ -847,7 +850,7 @@ export default function OpenFinance() {
           )}
           {subscriptions.length === 0 ? (
             <EmptyState>
-              <EmptyIcon>🔁</EmptyIcon>
+              <EmptyIcon><Icon name="event" size={36} /></EmptyIcon>
               <EmptyTitle>Nenhuma assinatura detectada</EmptyTitle>
               <EmptyDesc>Assinaturas recorrentes aparecerão aqui automaticamente.</EmptyDesc>
             </EmptyState>
@@ -856,7 +859,7 @@ export default function OpenFinance() {
               {subscriptions.slice(0, 4).map((s) => (
                 <SubscriptionItem key={s.id}>
                   <SubscriptionLeft>
-                    <SubscriptionIcon>🔁</SubscriptionIcon>
+                    <SubscriptionIcon><Icon name="event" size={18} /></SubscriptionIcon>
                     <div>
                       <SubscriptionName>{s.descricao}</SubscriptionName>
                       <SubscriptionDue>Próximo: {formatDateBR(s.data)}</SubscriptionDue>
@@ -878,7 +881,7 @@ export default function OpenFinance() {
         <CardHeader>
           <CardTitle>Extrato completo</CardTitle>
           <SecondaryBtn onClick={handleSync} disabled={syncing}>
-            {syncing ? <SpinnerIcon /> : '🔄'} Sincronizar
+            {syncing ? <SpinnerIcon /> : <Icon name="openFinance" size={16} />} Sincronizar
           </SecondaryBtn>
         </CardHeader>
         <FiltersRow>
@@ -915,7 +918,7 @@ export default function OpenFinance() {
           <SkeletonCard rows={6} />
         ) : groupedTransactions.length === 0 ? (
           <EmptyState>
-            <EmptyIcon>📋</EmptyIcon>
+            <EmptyIcon><Icon name="categories" size={36} /></EmptyIcon>
             <EmptyTitle>Nenhuma transação encontrada</EmptyTitle>
             <EmptyDesc>Ajuste os filtros ou sincronize sua conta para importar movimentações.</EmptyDesc>
           </EmptyState>
@@ -928,7 +931,7 @@ export default function OpenFinance() {
                   <TransactionItem key={t.id}>
                     <TransactionLeft>
                       <TransactionIcon type={t.tipo}>
-                        {getCategoryEmoji(t.categoria)}
+                        {getCategoryIcon(t.categoria)}
                       </TransactionIcon>
                       <div style={{ minWidth: 0 }}>
                         <TransactionDesc>{t.descricao}</TransactionDesc>
@@ -955,7 +958,7 @@ export default function OpenFinance() {
       </CardHeader>
       {installments.length === 0 ? (
         <EmptyState>
-          <EmptyIcon>💳</EmptyIcon>
+          <EmptyIcon><Icon name="card" size={36} /></EmptyIcon>
           <EmptyTitle>Nenhum parcelamento ativo</EmptyTitle>
           <EmptyDesc>Compras parceladas identificadas pelo Open Finance aparecerão aqui.</EmptyDesc>
         </EmptyState>
@@ -994,7 +997,7 @@ export default function OpenFinance() {
       )}
       {subscriptions.length === 0 ? (
         <EmptyState>
-          <EmptyIcon>🔁</EmptyIcon>
+          <EmptyIcon><Icon name="event" size={36} /></EmptyIcon>
           <EmptyTitle>Nenhuma assinatura detectada</EmptyTitle>
           <EmptyDesc>Pagamentos recorrentes identificados automaticamente aparecerão aqui.</EmptyDesc>
         </EmptyState>
@@ -1003,7 +1006,7 @@ export default function OpenFinance() {
           {subscriptions.map((s) => (
             <SubscriptionItem key={s.id}>
               <SubscriptionLeft>
-                <SubscriptionIcon>🔁</SubscriptionIcon>
+                <SubscriptionIcon><Icon name="event" size={18} /></SubscriptionIcon>
                 <div>
                   <SubscriptionName>{s.descricao}</SubscriptionName>
                   <SubscriptionDue>Próximo: {formatDateBR(s.data)}</SubscriptionDue>
@@ -1026,7 +1029,7 @@ export default function OpenFinance() {
       </CardHeader>
       {categoriesRanking.length === 0 ? (
         <EmptyState>
-          <EmptyIcon>📊</EmptyIcon>
+          <EmptyIcon><Icon name="chart" size={36} /></EmptyIcon>
           <EmptyTitle>Nenhuma categoria encontrada</EmptyTitle>
           <EmptyDesc>Sincronize seu banco para ver a distribuição de gastos por categoria.</EmptyDesc>
         </EmptyState>
@@ -1045,7 +1048,7 @@ export default function OpenFinance() {
             return (
               <CategoryRow key={cat.name} onClick={() => setActiveTab('transactions')}>
                 <CategoryName>
-                  <CategoryEmoji>{getCategoryEmoji(cat.name)}</CategoryEmoji>
+                  <CategoryEmoji>{getCategoryIcon(cat.name)}</CategoryEmoji>
                   {cat.name}
                 </CategoryName>
                 <CategoryAmount>{formatBRL(cat.current)}</CategoryAmount>
@@ -1071,7 +1074,7 @@ export default function OpenFinance() {
         <CardTitle>Cartões de crédito</CardTitle>
       </CardHeader>
       <CardsEmptyState>
-        <CardsEmptyIcon>💳</CardsEmptyIcon>
+        <CardsEmptyIcon><Icon name="card" size={42} /></CardsEmptyIcon>
         <EmptyTitle>Nenhum cartão conectado</EmptyTitle>
         <EmptyDesc>
           Conecte um cartão de crédito via Open Finance para acompanhar sua fatura, limite e gastos.
@@ -1086,7 +1089,7 @@ export default function OpenFinance() {
       <CardHeader>
         <CardTitle>Instituições disponíveis</CardTitle>
         <SecondaryBtn onClick={handleSync} disabled={syncing}>
-          {syncing ? <SpinnerIcon /> : '🔄'} Sincronizar contas
+          {syncing ? <SpinnerIcon /> : <Icon name="openFinance" size={16} />} Sincronizar contas
         </SecondaryBtn>
       </CardHeader>
 
@@ -1128,7 +1131,7 @@ export default function OpenFinance() {
         </BanksGrid>
       ) : banks.length === 0 ? (
         <EmptyState>
-          <EmptyIcon>🏦</EmptyIcon>
+          <EmptyIcon><Icon name="bank" size={36} /></EmptyIcon>
           <EmptyTitle>Nenhuma instituição retornada pela API</EmptyTitle>
           <EmptyDesc>O endpoint de Open Finance não retornou bancos disponíveis para conexão.</EmptyDesc>
         </EmptyState>
@@ -1146,7 +1149,7 @@ export default function OpenFinance() {
                 />
                 <BankName>{bank.nome}</BankName>
                 <BankStatus connected={isConnected}>
-                  {isConnected ? '✓ Conectado' : 'Disponível'}
+                  {isConnected ? 'Conectado' : 'Disponível'}
                 </BankStatus>
                 {!isConnected && (
                   <SecondaryBtn
@@ -1177,7 +1180,7 @@ export default function OpenFinance() {
         </HeaderInfo>
         <HeaderActions>
           <PrimaryBtn onClick={handleStartBankConnection}>
-            🏦 Conectar banco
+            <Icon name="bank" size={16} /> Conectar banco
           </PrimaryBtn>
         </HeaderActions>
       </PageHeader>
@@ -1208,7 +1211,7 @@ export default function OpenFinance() {
       {activeTab === 'categories'    && renderCategories()}
       {activeTab === 'cards'         && renderCards()}
 
-      <ChatFab title="Conversar com IA" onClick={() => {}}>💬</ChatFab>
+      <ChatFab title="Conversar com IA" onClick={() => {}}><Icon name="user" size={22} /></ChatFab>
 
       {showConnectModal && (
         <ModalOverlay onClick={() => setShowConnectModal(false)}>
@@ -1226,7 +1229,7 @@ export default function OpenFinance() {
               </BanksGrid>
             ) : availableBanks.length === 0 ? (
               <EmptyState style={{ padding: '1rem 0 0' }}>
-                <EmptyIcon>🏦</EmptyIcon>
+                <EmptyIcon><Icon name="bank" size={36} /></EmptyIcon>
                 <EmptyTitle>
                   {banks.length === 0
                     ? 'Nenhuma instituição retornada pela API'

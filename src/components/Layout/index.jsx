@@ -3,10 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
-import { setThemePalette, toggleSidebar, toggleTheme } from '../../store/uiSlice';
+import Icon from '../Icon';
+import { toggleSidebar } from '../../store/uiSlice';
 import { logout } from '../../store/authSlice';
 import api from '../../services/api';
-import { themePaletteOptions } from '../../styles/theme';
 
 import {
   Wrapper,
@@ -19,12 +19,9 @@ import {
   Topbar,
   TopbarLeft,
   TopbarRight,
-  ThemeControls,
-  PaletteSwatches,
-  PaletteButton,
-  ModeToggle,
   UserMenu,
   UserAvatar,
+  UserPhoto,
   UserName,
   PageContent,
   Overlay,
@@ -33,16 +30,15 @@ import {
 } from './styles';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: 'D' },
-  { to: '/categorias', label: 'Categorias', icon: 'C' },
-  { to: '/gastos-fixos', label: 'Gastos Fixos', icon: '-' },
-  { to: '/ganhos-fixos', label: 'Ganhos Fixos', icon: '+' },
-  { to: '/eventuais', label: 'Eventuais', icon: '*' },
-  { to: '/calendario', label: 'Calendario', icon: 'Q' },
-  { to: '/vista-bancaria', label: 'Bancos', icon: 'B' },
-  { to: '/casa', label: 'Casa', icon: 'H' },
-  { to: '/open-finance', label: 'Open Finance', icon: 'O' },
-  { to: '/perfil', label: 'Perfil', icon: 'P' },
+  { to: '/', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/categorias', label: 'Categorias', icon: 'categories' },
+  { to: '/gastos-fixos', label: 'Gastos Fixos', icon: 'expense' },
+  { to: '/ganhos-fixos', label: 'Ganhos Fixos', icon: 'income' },
+  { to: '/eventuais', label: 'Eventuais', icon: 'event' },
+  { to: '/calendario', label: 'Calendario', icon: 'calendar' },
+  { to: '/vista-bancaria', label: 'Bancos', icon: 'bank' },
+  { to: '/casa', label: 'Casa', icon: 'home' },
+  { to: '/open-finance', label: 'Open Finance', icon: 'openFinance' },
 ];
 
 export default function Layout({ children }) {
@@ -52,19 +48,9 @@ export default function Layout({ children }) {
   const ui = useSelector((state) => state.ui || {});
   const auth = useSelector((state) => state.auth || {});
 
-  const themePalette = themePaletteOptions.some((palette) => palette.value === ui.themePalette)
-    ? ui.themePalette
-    : 'emerald';
-  const themeMode = ui.themeMode === 'light' ? 'light' : 'dark';
   const sidebarOpen = !!ui.sidebarOpen;
   const user = auth.user || null;
   const refreshToken = auth.refreshToken || '';
-  const userInitials = (user?.nome || user?.email || 'U')
-    .split(' ')
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase();
 
   const closeSidebar = () => {
     if (sidebarOpen) {
@@ -105,7 +91,7 @@ export default function Layout({ children }) {
             aria-label="Fechar menu"
             type="button"
           >
-            x
+            <Icon name="close" size={18} />
           </CollapseButton>
         </SidebarHeader>
 
@@ -117,7 +103,7 @@ export default function Layout({ children }) {
                 className={({ isActive }) => (isActive ? 'active' : '')}
                 onClick={closeSidebar}
               >
-                <span className="icon">{item.icon}</span>
+                <span className="icon"><Icon name={item.icon} size={18} /></span>
                 <span>{item.label}</span>
               </NavLink>
             </NavItem>
@@ -126,7 +112,7 @@ export default function Layout({ children }) {
 
         <SidebarFooter>
           <LogoutButton onClick={handleLogout} type="button">
-            <span className="icon">S</span>
+            <span className="icon"><Icon name="logout" size={18} /></span>
             <span>Sair</span>
           </LogoutButton>
         </SidebarFooter>
@@ -140,33 +126,19 @@ export default function Layout({ children }) {
               aria-label="Abrir menu"
               type="button"
             >
-              =
+              <Icon name="menu" size={20} />
             </CollapseButton>
           </TopbarLeft>
 
           <TopbarRight>
-            <ThemeControls>
-              <PaletteSwatches aria-label="Selecionar paleta">
-                {themePaletteOptions.map((palette) => (
-                  <PaletteButton
-                    key={palette.value}
-                    type="button"
-                    title={palette.label}
-                    aria-label={`Usar paleta ${palette.label}`}
-                    $active={themePalette === palette.value}
-                    $primary={palette.primary}
-                    $secondary={palette.secondary}
-                    onClick={() => dispatch(setThemePalette(palette.value))}
-                  />
-                ))}
-              </PaletteSwatches>
-              <ModeToggle type="button" onClick={() => dispatch(toggleTheme())}>
-                {themeMode === 'dark' ? 'Dark' : 'Light'}
-              </ModeToggle>
-            </ThemeControls>
-
             <UserMenu as={NavLink} to="/perfil">
-              <UserAvatar>{userInitials}</UserAvatar>
+              <UserAvatar>
+                {user?.foto_perfil_url ? (
+                  <UserPhoto src={user.foto_perfil_url} alt="" />
+                ) : (
+                  <Icon name="user" size={18} />
+                )}
+              </UserAvatar>
               <UserName>{user?.nome?.split(' ')[0] ?? 'Usuario'}</UserName>
             </UserMenu>
           </TopbarRight>

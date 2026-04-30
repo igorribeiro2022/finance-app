@@ -71,6 +71,17 @@ export const AvatarPanel = styled(ElevatedCard)`
   gap: 0.75rem;
 `;
 
+export const AvatarActions = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+export const HiddenFileInput = styled.input`
+  display: none;
+`;
+
 export const AvatarPreview = styled.div`
   width: 112px;
   height: 112px;
@@ -282,6 +293,20 @@ export const SecondaryLink = styled(Link)`
   font-size: 0.9rem;
   font-weight: 800;
   text-decoration: none;
+`;
+
+export const SecondaryButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  padding: 0.55rem 0.9rem;
+  background: ${({ theme }) => theme.colors.surfaceOffset};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.82rem;
+  font-weight: 800;
+  cursor: pointer;
 `;
 
 export const Banner = styled.div`

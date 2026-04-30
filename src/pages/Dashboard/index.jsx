@@ -3,50 +3,94 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useTheme } from 'styled-components';
 import {
-  PieChart, Pie, Cell, BarChart, Bar, LineChart, Line,
-  XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, CartesianGrid,
+  Bar, BarChart, CartesianGrid, Cell, Line, LineChart,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
+
+import Icon from '../../components/Icon';
 import { getDashboard } from '../../services/dashboard';
 import {
-  PageHeader, PageTitle, PageSubtitle,
-  KpiGrid, KpiCard, KpiLabel, KpiValue, KpiIcon,
-  ChartsGrid, ChartCard, ChartTitle,
-  AgendaCard, AgendaTitle, AgendaList, AgendaItem,
-  AgendaInfo, AgendaDesc, AgendaDate, AgendaValue,
-  EmptyState, SkeletonCard, SkeletonText,
+  AgendaDate,
+  AgendaDesc,
+  AgendaIcon,
+  AgendaInfo,
+  AgendaItem,
+  AgendaList,
+  AgendaValue,
+  BalanceCard,
+  BalanceLabel,
+  BalanceValue,
+  ChartCard,
+  ChartHeader,
+  ChartTitle,
+  DashboardGrid,
+  DashboardShell,
+  EmptyState,
   ErrorBanner,
+  Gauge,
+  GaugeValue,
+  HeroPanel,
+  KpiCard,
+  KpiGrid,
+  KpiIcon,
+  KpiLabel,
+  KpiValue,
+  MainColumn,
+  Muted,
+  PageHeader,
+  PageSubtitle,
+  PageTitle,
+  QuickActions,
+  QuickPill,
+  SideCard,
+  SideColumn,
+  SkeletonCard,
 } from './styles';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 16 },
   visible: (i) => ({
-    opacity: 1, y: 0,
-    transition: { delay: i * 0.07, duration: 0.4, ease: 'easeOut' },
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.05, duration: 0.35, ease: 'easeOut' },
   }),
 };
 
 function fmt(value) {
   return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value || 0));
 }
+
 function num(v) {
-  const n = Number(v); return Number.isFinite(n) ? n : 0;
+  const n = Number(v);
+  return Number.isFinite(n) ? n : 0;
 }
-function arr(v) { return Array.isArray(v) ? v : []; }
-function obj(v) { return v && typeof v === 'object' && !Array.isArray(v) ? v : {}; }
+
+function arr(v) {
+  return Array.isArray(v) ? v : [];
+}
+
+function obj(v) {
+  return v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+}
 
 function getKpis(data) {
   const k = obj(data?.kpis);
-  const gastosFixos    = num(k.total_gastos_fixos    ?? k.totalgastosfixos);
-  const ganhosFixos    = num(k.total_ganhos_fixos    ?? k.totalganhosfixos);
+  const gastosFixos = num(k.total_gastos_fixos ?? k.totalgastosfixos);
+  const ganhosFixos = num(k.total_ganhos_fixos ?? k.totalganhosfixos);
   const gastosEventuais = num(k.total_gastos_eventuais ?? k.totalgastoseventuais);
   const ganhosEventuais = num(k.total_ganhos_eventuais ?? k.totalganhoseventuais);
-  const taxaComprometimento = num(k.taxa_comprometimento ?? k.taxacomprometimento);
-  const totalGastos  = gastosFixos + gastosEventuais;
-  const totalGanhos  = ganhosFixos + ganhosEventuais;
-  const saldoMes     = totalGanhos - totalGastos;
+  const totalGastos = num(k.total_gastos) || gastosFixos + gastosEventuais;
+  const totalGanhos = num(k.total_ganhos) || ganhosFixos + ganhosEventuais;
+  const saldoMes = num(k.saldo) || totalGanhos - totalGastos;
   return {
-    gastosFixos, ganhosFixos, gastosEventuais, ganhosEventuais,
-    taxaComprometimento, totalGastos, totalGanhos, saldoMes,
+    gastosFixos,
+    ganhosFixos,
+    gastosEventuais,
+    ganhosEventuais,
+    totalGastos,
+    totalGanhos,
+    saldoMes,
+    taxaComprometimento: num(k.taxa_comprometimento ?? k.taxacomprometimento),
   };
 }
 
@@ -57,14 +101,14 @@ function CustomTooltip({ active, payload, label, theme }) {
       background: theme.colors.glassBgElevated,
       border: `1px solid ${theme.colors.glassBorder}`,
       color: theme.colors.text,
-      borderRadius: 8, padding: '8px 12px', fontSize: 12,
-      backdropFilter: theme.colors.glassBackdrop,
-      WebkitBackdropFilter: theme.colors.glassBackdrop,
+      borderRadius: 14,
+      padding: '10px 12px',
+      fontSize: 12,
       boxShadow: theme.colors.glassShadow,
     }}>
-      {label && <p style={{ marginBottom: 4, fontWeight: 600 }}>{label}</p>}
-      {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color }}>
+      {label && <p style={{ marginBottom: 4, fontWeight: 800 }}>{label}</p>}
+      {payload.map((p) => (
+        <p key={p.dataKey} style={{ color: p.color }}>
           {p.name}: {fmt(p.value)}
         </p>
       ))}
@@ -74,228 +118,192 @@ function CustomTooltip({ active, payload, label, theme }) {
 
 function Skeleton() {
   return (
-    <>
-      <KpiGrid>
-        {[...Array(8)].map((_, i) => (
-          <SkeletonCard key={i}>
-            <SkeletonText $w="60%" $h="12px" />
-            <SkeletonText $w="80%" $h="28px" />
-          </SkeletonCard>
-        ))}
-      </KpiGrid>
-      <ChartsGrid>
-        {[...Array(4)].map((_, i) => (
-          <SkeletonCard key={i} $tall><SkeletonText $w="40%" $h="16px" /></SkeletonCard>
-        ))}
-      </ChartsGrid>
-    </>
+    <DashboardShell>
+      <HeroPanel>
+        <DashboardGrid>
+          <MainColumn>
+            <SkeletonCard $tall />
+            <SkeletonCard $tall />
+          </MainColumn>
+          <SideColumn>
+            <SkeletonCard />
+            <SkeletonCard />
+          </SideColumn>
+        </DashboardGrid>
+      </HeroPanel>
+    </DashboardShell>
   );
 }
 
 export default function Dashboard() {
-  const [data, setData]     = useState(null);
+  const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError]   = useState('');
-  const { user }            = useSelector((s) => s.auth);
-  const theme               = useTheme();
-  const tickColor           = theme.colors.textMuted;
-  const gridColor           = theme.colors.divider;
-  const expenseColors       = useMemo(() => [
-    theme.colors.primary,
-    theme.colors.accent,
-    theme.colors.link,
-    theme.colors.primaryHover,
-    theme.colors.neutral,
-    theme.colors.textMuted,
-  ], [theme]);
-  const incomeColors        = useMemo(() => [
-    theme.colors.success,
-    theme.colors.successAlt,
-    '#1F8A58',
-    '#6ED59B',
-    '#A7E6C0',
-    '#DDF8E9',
-  ], [theme]);
+  const [error, setError] = useState('');
+  const { user } = useSelector((s) => s.auth);
+  const theme = useTheme();
 
   useEffect(() => {
     (async () => {
       try {
-        setLoading(true); setError('');
+        setLoading(true);
+        setError('');
         const res = await getDashboard();
         setData(res.data);
       } catch {
-        setError('Não foi possível carregar o dashboard. Tente novamente.');
+        setError('Nao foi possivel carregar o dashboard. Tente novamente.');
       } finally {
         setLoading(false);
       }
     })();
   }, []);
 
-  const kpis             = getKpis(data);
-  const agendaItems      = arr(data?.agenda ?? data?.agenda_items);
-  const gastosCategoria  = arr(data?.grafico_gastosporcategoria  ?? data?.grafico_gastos_por_categoria);
-  const ganhosCategoria  = arr(data?.grafico_ganhosporcategoria  ?? data?.grafico_ganhos_por_categoria);
-  const fixosVsEventuais = obj(data?.graficofixosvseventuais     ?? data?.grafico_fixos_vs_eventuais);
-  const eventuaisPorMes  = arr(data?.graficoeventuaispormes      ?? data?.grafico_eventuais_por_mes);
+  const kpis = getKpis(data);
+  const graficos = obj(data?.graficos);
+  const agendaItems = arr(data?.agenda ?? data?.agenda_items).slice(0, 5);
+  const gastosCategoria = arr(graficos.gastos_por_categoria ?? data?.grafico_gastos_por_categoria);
+  const historico = arr(graficos.historico_6_meses ?? data?.grafico_eventuais_por_mes).map((item) => ({
+    mes: item.mes,
+    gastos: num(item.gastos_eventuais ?? item.gastos),
+    ganhos: num(item.ganhos_eventuais ?? item.ganhos),
+  }));
 
-  const fixosEventuaisData = useMemo(() => [
-    { name: 'G. Fixos',     valor: num(fixosVsEventuais.gastos_fixos    ?? fixosVsEventuais.gastosfixos) },
-    { name: 'G. Eventuais', valor: num(fixosVsEventuais.gastos_eventuais ?? fixosVsEventuais.gastoseventuais) },
-    { name: 'R. Fixos',     valor: num(fixosVsEventuais.ganhos_fixos    ?? fixosVsEventuais.ganhosfixos) },
-    { name: 'R. Eventuais', valor: num(fixosVsEventuais.ganhos_eventuais ?? fixosVsEventuais.ganhoseventuais) },
-  ], [fixosVsEventuais]);
+  const spendingData = useMemo(() => {
+    const dataSource = gastosCategoria.length > 0
+      ? gastosCategoria.map((item) => ({ name: item.categoria, valor: num(item.total ?? item.valor) }))
+      : [
+          { name: 'Fixos', valor: kpis.gastosFixos },
+          { name: 'Eventuais', valor: kpis.gastosEventuais },
+          { name: 'Ganhos', valor: kpis.totalGanhos },
+        ];
+    return dataSource.filter((item) => item.valor > 0);
+  }, [gastosCategoria, kpis.gastosFixos, kpis.gastosEventuais, kpis.totalGanhos]);
 
   const kpiCards = [
-    { label: 'Saldo do Mês',       value: fmt(kpis.saldoMes),        icon: '◈', type: kpis.saldoMes >= 0 ? 'income' : 'expense', highlight: true },
-    { label: 'Total de Ganhos',    value: fmt(kpis.totalGanhos),     icon: '↑', type: 'income' },
-    { label: 'Total de Gastos',    value: fmt(kpis.totalGastos),     icon: '↓', type: 'expense' },
-    { label: 'Comprometimento',    value: `${kpis.taxaComprometimento.toFixed(1)}%`, icon: '◎', type: kpis.taxaComprometimento > 80 ? 'expense' : kpis.taxaComprometimento > 50 ? 'neutral' : 'income' },
-    { label: 'Ganhos Fixos',       value: fmt(kpis.ganhosFixos),     icon: '↑', type: 'income' },
-    { label: 'Gastos Fixos',       value: fmt(kpis.gastosFixos),     icon: '↓', type: 'expense' },
-    { label: 'Ganhos Eventuais',   value: fmt(kpis.ganhosEventuais), icon: '↑', type: 'income' },
-    { label: 'Gastos Eventuais',   value: fmt(kpis.gastosEventuais), icon: '↓', type: 'expense' },
+    { label: 'Ganhos', value: fmt(kpis.totalGanhos), icon: 'income', type: 'income' },
+    { label: 'Gastos', value: fmt(kpis.totalGastos), icon: 'expense', type: 'expense' },
+    { label: 'Fixos', value: fmt(kpis.gastosFixos), icon: 'card', type: 'expense' },
+    { label: 'Eventuais', value: fmt(kpis.gastosEventuais), icon: 'event', type: 'neutral' },
   ];
 
+  if (loading) return <Skeleton />;
+
   return (
-    <>
-      <PageHeader>
-        <motion.div initial="hidden" animate="visible" variants={fadeUp} custom={0}>
-          <PageTitle>Olá, {user?.nome?.split(' ')[0] ?? 'bem-vindo'} 👋</PageTitle>
-          <PageSubtitle>Aqui está o resumo financeiro do mês atual.</PageSubtitle>
-        </motion.div>
-      </PageHeader>
-
+    <DashboardShell>
       {error && <ErrorBanner>{error}</ErrorBanner>}
-      {loading && <Skeleton />}
+      {data && (
+        <HeroPanel as={motion.section} initial="hidden" animate="visible" variants={fadeUp} custom={0}>
+          <PageHeader>
+            <div>
+              <PageTitle>Bom dia, {user?.nome?.split(' ')[0] ?? 'Usuario'}</PageTitle>
+              <PageSubtitle>Um resumo limpo do seu mes financeiro, sem ruido.</PageSubtitle>
+            </div>
+            <QuickPill><Icon name="calendar" size={16} /> Mes atual</QuickPill>
+          </PageHeader>
 
-      {!loading && data && (
-        <>
-          {/* KPIs */}
-          <KpiGrid>
-            {kpiCards.map((kpi, i) => (
-              <KpiCard
-                key={kpi.label}
-                as={motion.div}
-                custom={i}
-                initial="hidden"
-                animate="visible"
-                variants={fadeUp}
-                $type={kpi.type}
-                $highlight={kpi.highlight}
-              >
-                <KpiIcon $type={kpi.type}>{kpi.icon}</KpiIcon>
-                <KpiLabel>{kpi.label}</KpiLabel>
-                <KpiValue $type={kpi.type}>{kpi.value}</KpiValue>
-              </KpiCard>
-            ))}
-          </KpiGrid>
+          <DashboardGrid>
+            <MainColumn>
+              <BalanceCard>
+                <BalanceLabel>Saldo estimado</BalanceLabel>
+                <BalanceValue $negative={kpis.saldoMes < 0}>{fmt(kpis.saldoMes)}</BalanceValue>
+                <QuickActions>
+                  <QuickPill><Icon name="income" size={16} /> Receber {fmt(kpis.totalGanhos)}</QuickPill>
+                  <QuickPill><Icon name="expense" size={16} /> Pagar {fmt(kpis.totalGastos)}</QuickPill>
+                </QuickActions>
+              </BalanceCard>
 
-          {/* Gráficos */}
-          <ChartsGrid>
-            {/* Pizza — Gastos por Categoria */}
-            <ChartCard as={motion.div} custom={8} initial="hidden" animate="visible" variants={fadeUp}>
-              <ChartTitle>Gastos por Categoria</ChartTitle>
-              {gastosCategoria.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie data={gastosCategoria} dataKey="valor" nameKey="categoria"
-                      cx="50%" cy="50%" outerRadius={80} innerRadius={36}
-                      label={({ categoria, percent }) =>
-                        `${categoria} ${(percent * 100).toFixed(0)}%`
-                      }
-                      labelLine={false}
-                    >
-                      {gastosCategoria.map((_, i) => (
-                        <Cell key={i} fill={expenseColors[i % expenseColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip theme={theme} />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : <EmptyState>Nenhum gasto registrado</EmptyState>}
-            </ChartCard>
-
-            {/* Pizza — Ganhos por Categoria */}
-            <ChartCard as={motion.div} custom={9} initial="hidden" animate="visible" variants={fadeUp}>
-              <ChartTitle>Ganhos por Categoria</ChartTitle>
-              {ganhosCategoria.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <PieChart>
-                    <Pie data={ganhosCategoria} dataKey="valor" nameKey="categoria"
-                      cx="50%" cy="50%" outerRadius={80} innerRadius={36}
-                      label={({ categoria, percent }) =>
-                        `${categoria} ${(percent * 100).toFixed(0)}%`
-                      }
-                      labelLine={false}
-                    >
-                      {ganhosCategoria.map((_, i) => (
-                        <Cell key={i} fill={incomeColors[i % incomeColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip theme={theme} />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : <EmptyState>Nenhum ganho registrado</EmptyState>}
-            </ChartCard>
-
-            {/* Barras — Fixos vs Eventuais */}
-            <ChartCard as={motion.div} custom={10} initial="hidden" animate="visible" variants={fadeUp}>
-              <ChartTitle>Fixos vs Eventuais</ChartTitle>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart data={fixosEventuaisData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                  <XAxis dataKey="name" tick={{ fontSize: 11, fill: tickColor }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fontSize: 11, fill: tickColor }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
-                  <Tooltip content={<CustomTooltip theme={theme} />} />
-                  <Bar dataKey="valor" radius={[6, 6, 0, 0]}>
-                    {fixosEventuaisData.map((_, i) => (
-                      <Cell key={i} fill={i < 2 ? '#D90707' : '#28BF11'} />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartCard>
-
-            {/* Linha — Eventuais por Mês */}
-            <ChartCard as={motion.div} custom={11} initial="hidden" animate="visible" variants={fadeUp} $wide>
-              <ChartTitle>Eventuais por Mês (últimos 6 meses)</ChartTitle>
-              {eventuaisPorMes.length > 0 ? (
-                <ResponsiveContainer width="100%" height={220}>
-                  <LineChart data={eventuaisPorMes} margin={{ top: 8, right: 16, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                    <XAxis dataKey="mes" tick={{ fontSize: 11, fill: tickColor }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 11, fill: tickColor }} tickFormatter={(v) => `R$${(v/1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomTooltip theme={theme} />} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Line type="monotone" dataKey="gastos" name="Gastos" stroke="#D90707" strokeWidth={2.5} dot={{ r: 4, fill: '#D90707' }} activeDot={{ r: 6 }} />
-                    <Line type="monotone" dataKey="ganhos" name="Ganhos" stroke="#28BF11" strokeWidth={2.5} dot={{ r: 4, fill: '#28BF11' }} activeDot={{ r: 6 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              ) : <EmptyState>Nenhum eventual registrado</EmptyState>}
-            </ChartCard>
-          </ChartsGrid>
-
-          {/* Agenda */}
-          <AgendaCard as={motion.div} custom={12} initial="hidden" animate="visible" variants={fadeUp}>
-            <AgendaTitle>Próximos Vencimentos e Recebimentos</AgendaTitle>
-            {agendaItems.length > 0 ? (
-              <AgendaList>
-                {agendaItems.map((item, i) => (
-                  <AgendaItem key={i} $type={(item.tipo || '').includes('gasto') ? 'expense' : 'income'}>
-                    <AgendaInfo>
-                      <AgendaDesc>{item.descricao}</AgendaDesc>
-                      <AgendaDate $proximity={item.proximidade}>{item.proximidade}</AgendaDate>
-                    </AgendaInfo>
-                    <AgendaValue $type={(item.tipo || '').includes('gasto') ? 'expense' : 'income'}>
-                      {(item.tipo || '').includes('gasto') ? '−' : '+'} {fmt(item.valor)}
-                    </AgendaValue>
-                  </AgendaItem>
+              <KpiGrid>
+                {kpiCards.map((card, index) => (
+                  <KpiCard key={card.label} as={motion.div} variants={fadeUp} custom={index + 1}>
+                    <KpiIcon $type={card.type}><Icon name={card.icon} size={20} /></KpiIcon>
+                    <KpiLabel>{card.label}</KpiLabel>
+                    <KpiValue $type={card.type}>{card.value}</KpiValue>
+                  </KpiCard>
                 ))}
-              </AgendaList>
-            ) : <EmptyState>Nenhum lançamento fixo cadastrado</EmptyState>}
-          </AgendaCard>
-        </>
+              </KpiGrid>
+
+              <ChartCard>
+                <ChartHeader>
+                  <div>
+                    <ChartTitle>Despesas por categoria</ChartTitle>
+                    <Muted>Distribuicao principal do periodo</Muted>
+                  </div>
+                  <QuickPill><Icon name="arrowUpRight" size={15} /> Analise</QuickPill>
+                </ChartHeader>
+                {spendingData.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={280}>
+                    <BarChart data={spendingData} margin={{ top: 16, right: 12, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTooltip theme={theme} />} />
+                      <Bar dataKey="valor" radius={[12, 12, 12, 12]}>
+                        {spendingData.map((_, i) => (
+                          <Cell key={i} fill={i === 0 ? theme.colors.primary : i === 1 ? theme.colors.accent : theme.colors.success} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <EmptyState>Nenhum gasto registrado ainda.</EmptyState>
+                )}
+              </ChartCard>
+            </MainColumn>
+
+            <SideColumn>
+              <SideCard>
+                <ChartTitle>Comprometimento</ChartTitle>
+                <Muted>Quanto da renda ja esta alocada</Muted>
+                <Gauge $value={kpis.taxaComprometimento}>
+                  <GaugeValue>{kpis.taxaComprometimento.toFixed(0)}%</GaugeValue>
+                </Gauge>
+              </SideCard>
+
+              <SideCard>
+                <ChartHeader>
+                  <ChartTitle>Fluxo recente</ChartTitle>
+                  <Muted>6 meses</Muted>
+                </ChartHeader>
+                {historico.length > 0 ? (
+                  <ResponsiveContainer width="100%" height={190}>
+                    <LineChart data={historico} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                      <XAxis dataKey="mes" hide />
+                      <YAxis hide />
+                      <Tooltip content={<CustomTooltip theme={theme} />} />
+                      <Line type="monotone" dataKey="ganhos" name="Ganhos" stroke={theme.colors.success} strokeWidth={3} dot={false} />
+                      <Line type="monotone" dataKey="gastos" name="Gastos" stroke={theme.colors.error} strokeWidth={3} dot={false} />
+                    </LineChart>
+                  </ResponsiveContainer>
+                ) : (
+                  <EmptyState>Sem historico suficiente.</EmptyState>
+                )}
+              </SideCard>
+
+              <SideCard>
+                <ChartTitle>Proximos movimentos</ChartTitle>
+                <AgendaList>
+                  {agendaItems.length > 0 ? agendaItems.map((item, index) => {
+                    const isIncome = String(item.tipo || '').includes('ganho');
+                    return (
+                      <AgendaItem key={`${item.descricao}-${index}`}>
+                        <AgendaIcon $type={isIncome ? 'income' : 'expense'}>
+                          <Icon name={isIncome ? 'income' : 'expense'} size={17} />
+                        </AgendaIcon>
+                        <AgendaInfo>
+                          <AgendaDesc>{item.descricao}</AgendaDesc>
+                          <AgendaDate>{item.label || item.proximidade || item.data}</AgendaDate>
+                        </AgendaInfo>
+                        <AgendaValue $type={isIncome ? 'income' : 'expense'}>
+                          {isIncome ? '+' : '-'}{fmt(item.valor)}
+                        </AgendaValue>
+                      </AgendaItem>
+                    );
+                  }) : <EmptyState>Nenhum fixo cadastrado.</EmptyState>}
+                </AgendaList>
+              </SideCard>
+            </SideColumn>
+          </DashboardGrid>
+        </HeroPanel>
       )}
-    </>
+    </DashboardShell>
   );
 }

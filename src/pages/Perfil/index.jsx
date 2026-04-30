@@ -2,12 +2,14 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { getAccounts, getConsents } from '../../services/openfinance';
-import { getMe, patchMe } from '../../services/user';
+import Icon from '../../components/Icon';
+import { deleteAvatar, getMe, patchMe, uploadAvatar } from '../../services/user';
 import { updateUser } from '../../store/authSlice';
 import { setThemeMode, setThemePalette } from '../../store/uiSlice';
 import { themeModeOptions, themePaletteOptions } from '../../styles/theme';
 import {
   Actions,
+  AvatarActions,
   AvatarPanel,
   AvatarPreview,
   BankGrid,
@@ -31,7 +33,9 @@ import {
   ProfileGrid,
   ProfileName,
   SecondaryLink,
+  SecondaryButton,
   SectionStack,
+  HiddenFileInput,
   ToggleGrid,
   ToggleInput,
   ToggleRow,
@@ -51,15 +55,6 @@ const normalizeList = (payload) => {
   if (Array.isArray(payload?.items)) return payload.items;
   return [];
 };
-
-const initials = (nome, email) => (
-  (nome || email || 'U')
-    .split(' ')
-    .slice(0, 2)
-    .map((part) => part[0])
-    .join('')
-    .toUpperCase()
-);
 
 export default function Perfil() {
   const dispatch = useDispatch();
@@ -188,7 +183,6 @@ export default function Perfil() {
         nome: form.nome.trim(),
         email: form.email.trim(),
         telefone: form.telefone.trim(),
-        foto_perfil_url: form.foto_perfil_url.trim(),
         preferencias: form.preferencias,
         notificacoes: form.notificacoes,
       };
@@ -206,6 +200,36 @@ export default function Perfil() {
       setError(detail);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleAvatarUpload = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+
+    try {
+      setError('');
+      const response = await uploadAvatar(file);
+      const user = response.data;
+      dispatch(updateUser(user));
+      setForm((current) => ({ ...current, foto_perfil_url: user.foto_perfil_url || '' }));
+      setSuccess('Foto de perfil atualizada.');
+    } catch (err) {
+      setError(err?.response?.data?.detail || 'Nao foi possivel enviar a foto.');
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    try {
+      setError('');
+      const response = await deleteAvatar();
+      const user = response.data;
+      dispatch(updateUser(user));
+      setForm((current) => ({ ...current, foto_perfil_url: '' }));
+      setSuccess('Foto de perfil removida.');
+    } catch {
+      setError('Nao foi possivel remover a foto.');
     }
   };
 
@@ -230,13 +254,28 @@ export default function Perfil() {
               {form.foto_perfil_url ? (
                 <img src={form.foto_perfil_url} alt="Foto de perfil" />
               ) : (
-                initials(form.nome, form.email)
+                <Icon name="user" size={42} />
               )}
             </AvatarPreview>
             <div>
               <ProfileName>{form.nome || 'Seu nome'}</ProfileName>
               <ProfileEmail>{form.email || 'email@exemplo.com'}</ProfileEmail>
             </div>
+            <AvatarActions>
+              <SecondaryButton as="label">
+                Alterar foto
+                <HiddenFileInput
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  onChange={handleAvatarUpload}
+                />
+              </SecondaryButton>
+              {form.foto_perfil_url && (
+                <SecondaryButton type="button" onClick={handleAvatarDelete}>
+                  Remover
+                </SecondaryButton>
+              )}
+            </AvatarActions>
           </AvatarPanel>
 
           <ElevatedCard>
@@ -288,15 +327,6 @@ export default function Perfil() {
                   value={form.telefone}
                   placeholder="+55 11 99999-0000"
                   onChange={(event) => handleField('telefone', event.target.value)}
-                  disabled={loading}
-                />
-              </FormGroup>
-              <FormGroup>
-                Foto de perfil por URL
-                <FormInput
-                  value={form.foto_perfil_url}
-                  placeholder="https://..."
-                  onChange={(event) => handleField('foto_perfil_url', event.target.value)}
                   disabled={loading}
                 />
               </FormGroup>

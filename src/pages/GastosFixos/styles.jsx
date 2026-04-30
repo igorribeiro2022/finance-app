@@ -55,6 +55,9 @@ export const AddButton = styled.button`
   font-size: 0.875rem;
   font-weight: 600;
   white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
 `;
 
 export const Table = styled.table`
@@ -62,6 +65,12 @@ export const Table = styled.table`
   width: 100%;
   border-radius: ${({ theme }) => theme.radius.lg};
   overflow: hidden;
+
+  @media (max-width: 760px) {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 `;
 
 export const Thead = styled.thead`background: ${({ theme }) => theme.colors.surfaceOffset};`;
@@ -109,6 +118,9 @@ export const ActionBtn = styled.button`
   font-size: 0.875rem;
   color: ${({ theme, $danger }) => $danger ? theme.colors.error : theme.colors.textMuted};
   transition: ${({ theme }) => theme.transition};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   &:hover {
     background: ${({ theme, $danger }) => $danger ? 'rgba(217,7,7,0.08)' : theme.colors.surfaceOffset};
     color: ${({ theme, $danger }) => $danger ? theme.colors.error : theme.colors.text};

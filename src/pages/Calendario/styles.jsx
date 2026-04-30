@@ -12,6 +12,10 @@ export const Wrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 0;
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+  overflow-x: hidden;
 `;
 
 export const PageTitle = styled.h1`

@@ -15,6 +15,7 @@ const GlobalStyles = createGlobalStyle`
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    overflow-x: hidden;
   }
 
   body {
@@ -28,10 +29,12 @@ const GlobalStyles = createGlobalStyle`
     color: ${({ theme }) => theme.colors.text};
     transition: background-color 300ms ease, color 300ms ease, background-image 300ms ease;
     min-height: 100dvh;
+    overflow-x: hidden;
   }
 
   #root {
     min-height: 100dvh;
+    overflow-x: hidden;
   }
 
   img, picture, video, canvas, svg {

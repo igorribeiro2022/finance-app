@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 
+import Icon from '../../components/Icon';
 import {
   getGastosFixos,
   createGastoFixo,
@@ -287,7 +288,7 @@ export default function GastosFixos() {
             onClick={openCreate}
             disabled={categoriasLoading || categoriaOptions.length === 0}
           >
-            Novo gasto fixo
+            <Icon name="plus" size={16} /> Novo gasto fixo
           </AddButton>
         </HeaderRow>
       </PageHeader>
@@ -365,11 +366,11 @@ export default function GastosFixos() {
                 <Td>{formatDateTimeBR(item.createdat ?? item.created_at)}</Td>
                 <Td>
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <ActionBtn onClick={() => openEdit(item)}>
-                      Editar
+                    <ActionBtn onClick={() => openEdit(item)} aria-label={`Editar ${item.descricao}`}>
+                      <Icon name="edit" size={16} />
                     </ActionBtn>
-                    <ActionBtn $danger onClick={() => setDeleteTarget(item)}>
-                      Excluir
+                    <ActionBtn $danger onClick={() => setDeleteTarget(item)} aria-label={`Excluir ${item.descricao}`}>
+                      <Icon name="trash" size={16} />
                     </ActionBtn>
                   </div>
                 </Td>
@@ -394,7 +395,7 @@ export default function GastosFixos() {
                 <ModalTitle>
                   {editing ? 'Editar gasto fixo' : 'Novo gasto fixo'}
                 </ModalTitle>
-                <CloseBtn onClick={closeModal}>&times;</CloseBtn>
+                <CloseBtn onClick={closeModal}><Icon name="close" size={16} /></CloseBtn>
               </ModalHeader>
 
               <Form onSubmit={handleSubmit(onSubmit)}>

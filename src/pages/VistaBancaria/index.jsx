@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Icon from '../../components/Icon';
 import { getConsolidado, getTransacoes } from '../../services/vistaBancaria';
 import {
   PageWrapper, PageHeader, HeaderInfo, PageTitle, PageSubtitle, HeaderActions,
@@ -26,20 +27,31 @@ const formatDateLabel = (iso) => {
   return d.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
 };
 
-const CATEGORY_EMOJI = {
-  'Transporte': '🚌', 'Alimentação': '🛒', 'Restaurantes': '🍔',
-  'Supermercado': '🛒', 'Eletrônicos': '💻', 'Empréstimos': '💸',
-  'Transferências': '↔️', 'Saúde': '🏥', 'Educação': '📚',
-  'Lazer': '🎬', 'Moradia': '🏠', 'Assinaturas': '🔁',
-  'Estorno': '↩️', 'Outros': '📌',
+const CATEGORY_ICON_NAMES = {
+  Transporte: 'card',
+  Alimentação: 'wallet',
+  Restaurantes: 'wallet',
+  Supermercado: 'wallet',
+  Eletrônicos: 'card',
+  Empréstimos: 'bank',
+  Transferências: 'openFinance',
+  Saúde: 'alert',
+  Educação: 'categories',
+  Lazer: 'event',
+  Moradia: 'home',
+  Assinaturas: 'event',
+  Estorno: 'trend',
+  Outros: 'categories',
 };
 
-const getCatEmoji = (cat) => {
-  if (!cat) return '📌';
-  for (const k of Object.keys(CATEGORY_EMOJI)) {
-    if (cat.toLowerCase().includes(k.toLowerCase())) return CATEGORY_EMOJI[k];
+const getCatIcon = (cat, size = 16) => {
+  if (!cat) return <Icon name="categories" size={size} />;
+  for (const k of Object.keys(CATEGORY_ICON_NAMES)) {
+    if (cat.toLowerCase().includes(k.toLowerCase())) {
+      return <Icon name={CATEGORY_ICON_NAMES[k]} size={size} />;
+    }
   }
-  return '📌';
+  return <Icon name="categories" size={size} />;
 };
 
 const TIPO_LABEL = { corrente: 'Corrente', poupanca: 'Poupança', poupança: 'Poupança', investimento: 'Investimento' };
@@ -78,7 +90,7 @@ export default function VistaBancaria() {
 
   /* filtros de transações */
   const [filters, setFilters] = useState({
-    banco: '', tipo: '', datainicio: '', datafim: '', categoria: '',
+    banco: '', tipo: '', data_inicio: '', data_fim: '', categoria: '',
   });
 
   /* feedback */
@@ -131,15 +143,15 @@ export default function VistaBancaria() {
     const p = {};
     if (filters.banco)     p.banco      = filters.banco;
     if (filters.tipo)      p.tipo       = filters.tipo;
-    if (filters.datainicio)p.datainicio = filters.datainicio;
-    if (filters.datafim)   p.datafim    = filters.datafim;
+    if (filters.data_inicio) p.data_inicio = filters.data_inicio;
+    if (filters.data_fim) p.data_fim = filters.data_fim;
     if (filters.categoria) p.categoria  = filters.categoria;
     return p;
   };
 
   const handleFiltrar = () => loadTransacoes(activeFiltersClean());
   const handleLimpar  = () => {
-    setFilters({ banco: '', tipo: '', datainicio: '', datafim: '', categoria: '' });
+    setFilters({ banco: '', tipo: '', data_inicio: '', data_fim: '', categoria: '' });
     loadTransacoes();
   };
 
@@ -218,7 +230,7 @@ export default function VistaBancaria() {
         </SaldoInfo>
         <SaldoActions>
           <SecondaryBtn onClick={handleSincronizar} disabled={syncing}>
-            {syncing ? <SpinnerIcon /> : '↻'} Atualizar
+            {syncing ? <SpinnerIcon /> : <Icon name="openFinance" size={16} />} Atualizar
           </SecondaryBtn>
         </SaldoActions>
       </SaldoHero>
@@ -260,7 +272,7 @@ export default function VistaBancaria() {
             <SkeletonCard rows={3} />
           ) : porInstituicao.length === 0 ? (
             <EmptyState>
-              <EmptyIcon>🏦</EmptyIcon>
+              <EmptyIcon><Icon name="bank" size={36} /></EmptyIcon>
               <EmptyTitle>Nenhuma conta conectada</EmptyTitle>
               <EmptyDesc>Conecte seus bancos em Open Finance para visualizar o saldo consolidado.</EmptyDesc>
             </EmptyState>
@@ -317,7 +329,7 @@ export default function VistaBancaria() {
             <SkeletonCard rows={5} />
           ) : txRecentes.length === 0 ? (
             <EmptyState>
-              <EmptyIcon>📋</EmptyIcon>
+              <EmptyIcon><Icon name="categories" size={36} /></EmptyIcon>
               <EmptyTitle>Nenhuma transação</EmptyTitle>
               <EmptyDesc>As transações das contas conectadas aparecerão aqui.</EmptyDesc>
             </EmptyState>
@@ -325,7 +337,7 @@ export default function VistaBancaria() {
             <TxList>
               {txRecentes.slice(0, 8).map((t, i) => (
                 <TxItem key={t.id ?? i}>
-                  <TxIcon type={t.tipo}>{getCatEmoji(t.categoria)}</TxIcon>
+                  <TxIcon type={t.tipo}>{getCatIcon(t.categoria)}</TxIcon>
                   <TxBody>
                     <TxDesc>{t.descricao}</TxDesc>
                     <TxMeta>
@@ -352,7 +364,7 @@ export default function VistaBancaria() {
         <CardHeader>
           <CardTitle>Extrato unificado</CardTitle>
           <SecondaryBtn onClick={handleSincronizar} disabled={syncing}>
-            {syncing ? <SpinnerIcon /> : '↻'} Atualizar
+            {syncing ? <SpinnerIcon /> : <Icon name="openFinance" size={16} />} Atualizar
           </SecondaryBtn>
         </CardHeader>
 
@@ -385,14 +397,14 @@ export default function VistaBancaria() {
 
           <FilterInput
             type="date"
-            value={filters.datainicio}
-            onChange={(e) => setFilters((p) => ({ ...p, datainicio: e.target.value }))}
+            value={filters.data_inicio}
+            onChange={(e) => setFilters((p) => ({ ...p, data_inicio: e.target.value }))}
           />
 
           <FilterInput
             type="date"
-            value={filters.datafim}
-            onChange={(e) => setFilters((p) => ({ ...p, datafim: e.target.value }))}
+            value={filters.data_fim}
+            onChange={(e) => setFilters((p) => ({ ...p, data_fim: e.target.value }))}
           />
 
           <PrimaryBtn onClick={handleFiltrar} disabled={loadingTx}>
@@ -408,7 +420,7 @@ export default function VistaBancaria() {
           <SkeletonCard rows={6} />
         ) : txAgrupadas.length === 0 ? (
           <EmptyState>
-            <EmptyIcon>📋</EmptyIcon>
+            <EmptyIcon><Icon name="categories" size={36} /></EmptyIcon>
             <EmptyTitle>Nenhuma transação encontrada</EmptyTitle>
             <EmptyDesc>Ajuste os filtros ou conecte um banco para importar movimentações.</EmptyDesc>
           </EmptyState>
@@ -419,7 +431,7 @@ export default function VistaBancaria() {
               <TxList>
                 {txs.map((t, i) => (
                   <TxItem key={t.id ?? i}>
-                    <TxIcon type={t.tipo}>{getCatEmoji(t.categoria)}</TxIcon>
+                    <TxIcon type={t.tipo}>{getCatIcon(t.categoria)}</TxIcon>
                     <TxBody>
                       <TxDesc>{t.descricao}</TxDesc>
                       <TxMeta>
@@ -455,7 +467,7 @@ export default function VistaBancaria() {
           <SkeletonCard rows={5} />
         ) : categorias.length === 0 ? (
           <EmptyState>
-            <EmptyIcon>📊</EmptyIcon>
+            <EmptyIcon><Icon name="chart" size={36} /></EmptyIcon>
             <EmptyTitle>Sem dados de categoria</EmptyTitle>
             <EmptyDesc>As categorias são calculadas a partir das transações das contas conectadas.</EmptyDesc>
           </EmptyState>
@@ -474,7 +486,7 @@ export default function VistaBancaria() {
               <KpiCard>
                 <KpiLabel>Maior categoria</KpiLabel>
                 <KpiValue style={{ fontSize: '0.95rem' }}>
-                  {getCatEmoji(categorias[0]?.cat)} {categorias[0]?.cat}
+                  {getCatIcon(categorias[0]?.cat, 18)} {categorias[0]?.cat}
                 </KpiValue>
                 <KpiVariation>{formatBRL(categorias[0]?.total)}</KpiVariation>
               </KpiCard>
@@ -483,7 +495,7 @@ export default function VistaBancaria() {
             <CatTable>
               {categorias.map(({ cat, total }) => (
                 <CatRow key={cat}>
-                  <CatLabel>{getCatEmoji(cat)} {cat}</CatLabel>
+                  <CatLabel>{getCatIcon(cat)} {cat}</CatLabel>
                   <CatBar pct={(total / catMax) * 100} />
                   <CatValue>{formatBRL(total)}</CatValue>
                 </CatRow>
@@ -507,7 +519,7 @@ export default function VistaBancaria() {
         </HeaderInfo>
         <HeaderActions>
           <SecondaryBtn onClick={handleSincronizar} disabled={syncing}>
-            {syncing ? <SpinnerIcon /> : '↻'} Sincronizar
+            {syncing ? <SpinnerIcon /> : <Icon name="openFinance" size={16} />} Sincronizar
           </SecondaryBtn>
         </HeaderActions>
       </PageHeader>

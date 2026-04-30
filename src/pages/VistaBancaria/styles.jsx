@@ -14,7 +14,10 @@ const spin = keyframes`to { transform: rotate(360deg); }`;
 /* ── layout base ────────────────────────────────────────────────── */
 export const PageWrapper = styled.div`
   padding: 1.5rem 2rem 3rem;
+  width: 100%;
   max-width: 1200px;
+  margin: 0 auto;
+  overflow-x: hidden;
   animation: ${fadeUp} 0.25s ease;
   @media (max-width: 768px) { padding: 1rem; }
 `;
@@ -386,6 +389,7 @@ export const TxIcon = styled.div`
   justify-content: center;
   font-size: 1rem;
   flex-shrink: 0;
+  color: ${({ type, theme }) => (type === 'credito' ? theme.success : theme.primary)};
   background: ${({ type }) =>
     type === 'credito'
       ? 'rgba(67,122,34,0.1)'
@@ -446,6 +450,9 @@ export const CatRow = styled.div`
 `;
 
 export const CatLabel = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
   font-size: 0.8rem;
   color: ${({ theme }) => theme.text};
   width: 130px;
@@ -491,7 +498,15 @@ export const EmptyState = styled.div`
   gap: 0.5rem;
 `;
 
-export const EmptyIcon  = styled.div`font-size: 2.5rem; margin-bottom: 0.25rem;`;
+export const EmptyIcon  = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin-bottom: 0.25rem;
+  color: ${({ theme }) => theme.primary};
+  opacity: 0.6;
+`;
 export const EmptyTitle = styled.div`
   font-size: 0.9rem;
   font-weight: 600;

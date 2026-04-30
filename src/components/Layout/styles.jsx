@@ -7,6 +7,7 @@ export const Wrapper = styled.div`
   min-height: 100dvh;
   background-color: ${({ theme }) => theme.colors.bg};
   position: relative;
+  overflow-x: hidden;
 `;
 
 export const Overlay = styled.div`
@@ -100,10 +101,13 @@ export const NavItem = styled.li`
     transition: ${({ theme }) => theme.transition};
 
     .icon {
-      font-size: 1rem;
       width: 20px;
+      height: 20px;
       text-align: center;
       flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
 
     &:hover {
@@ -155,6 +159,10 @@ export const Topbar = styled.header`
   position: sticky;
   top: 0;
   z-index: 50;
+
+  @media (max-width: 768px) {
+    padding: 0.65rem 1rem;
+  }
 `;
 
 export const TopbarLeft = styled.div`
@@ -169,6 +177,10 @@ export const TopbarRight = styled.div`
   gap: 0.75rem;
   flex-wrap: wrap;
   justify-content: flex-end;
+
+  @media (max-width: 480px) {
+    gap: 0.5rem;
+  }
 `;
 
 export const CollapseButton = styled.button`
@@ -284,7 +296,7 @@ export const UserMenu = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0.35rem 0.75rem;
+  padding: 0.28rem 0.75rem 0.28rem 0.32rem;
   border-radius: ${({ theme }) => theme.radius.full};
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.glassBorder};
@@ -298,8 +310,8 @@ export const UserMenu = styled.div`
 `;
 
 export const UserAvatar = styled.span`
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   border-radius: 999px;
   display: inline-flex;
   align-items: center;
@@ -308,6 +320,13 @@ export const UserAvatar = styled.span`
   color: ${({ theme }) => theme.colors.primary};
   font-size: 0.7rem;
   font-weight: 800;
+  overflow: hidden;
+`;
+
+export const UserPhoto = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 `;
 
 export const UserName = styled.span`
@@ -319,10 +338,15 @@ export const UserName = styled.span`
 export const PageContent = styled.main`
   flex: 1;
   padding: 2rem;
-  overflow-y: auto;
+  overflow-x: hidden;
   position: relative;
+  min-width: 0;
 
   @media (max-width: 768px) {
     padding: 1.25rem 1rem;
+  }
+
+  @media (max-width: 480px) {
+    padding: 1rem 0.85rem;
   }
 `;

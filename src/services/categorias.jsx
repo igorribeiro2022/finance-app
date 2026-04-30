@@ -9,5 +9,7 @@ export const createCategoria = (payload) =>
 export const updateCategoria = (id, payload) =>
   api.patch(`/categorias/${id}/`, payload);
 
-export const deleteCategoria = (id) =>
-  api.delete(`/categorias/${id}/`);
+export const deleteCategoria = (id, transferToId) =>
+  api.delete(`/categorias/${id}/`, {
+    data: transferToId ? { transfer_to_id: transferToId } : undefined,
+  });

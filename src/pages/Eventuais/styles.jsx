@@ -48,6 +48,9 @@ export const AddButton = styled.button`
   border-radius: ${({ theme }) => theme.radius.md};
   font-size: 0.875rem;
   font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
 `;
 
 export const FiltersBar = styled.div`
@@ -143,6 +146,12 @@ export const Table = styled.table`
   margin-top: 1.25rem;
   border-radius: ${({ theme }) => theme.radius.lg};
   overflow: hidden;
+
+  @media (max-width: 760px) {
+    display: block;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
 `;
 
 export const Thead = styled.thead`
@@ -212,6 +221,9 @@ export const ActionBtn = styled.button`
   font-size: 0.875rem;
   color: ${({ theme, $danger }) => $danger ? theme.colors.error : theme.colors.textMuted};
   transition: ${({ theme }) => theme.transition};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 
   &:hover {
     background: ${({ theme, $danger }) =>

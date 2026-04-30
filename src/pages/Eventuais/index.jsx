@@ -4,6 +4,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as yup from 'yup';
 import { motion, AnimatePresence } from 'framer-motion';
 
+import Icon from '../../components/Icon';
 import {
   getEventuais,
   createEventual,
@@ -177,8 +178,8 @@ export default function Eventuais() {
       const params = {};
       if (activeFilters.tipo) params.tipo = activeFilters.tipo;
       if (activeFilters.categoria) params.categoria = activeFilters.categoria;
-      if (activeFilters.data_inicio) params.datainicio = activeFilters.data_inicio;
-      if (activeFilters.data_fim) params.datafim = activeFilters.data_fim;
+      if (activeFilters.data_inicio) params.data_inicio = activeFilters.data_inicio;
+      if (activeFilters.data_fim) params.data_fim = activeFilters.data_fim;
 
       const res = await getEventuais(params);
       const data = Array.isArray(res.data) ? res.data : (res.data?.results ?? []);
@@ -378,7 +379,7 @@ export default function Eventuais() {
           </div>
 
           <TopActions>
-            <AddButton onClick={openCreate}>+ Novo lançamento</AddButton>
+            <AddButton onClick={openCreate}><Icon name="plus" size={16} /> Novo lancamento</AddButton>
           </TopActions>
         </HeaderRow>
 
@@ -561,10 +562,10 @@ export default function Eventuais() {
 
               <Td>
                 <ActionBtn onClick={() => openEdit(item)} title="Editar">
-                  ✎
+                  <Icon name="edit" size={16} />
                 </ActionBtn>
                 <ActionBtn $danger onClick={() => setDeleteTarget(item)} title="Excluir">
-                  ✕
+                  <Icon name="trash" size={16} />
                 </ActionBtn>
               </Td>
             </Tr>
@@ -594,7 +595,7 @@ export default function Eventuais() {
                 <ModalTitle>
                   {editing ? 'Editar lançamento eventual' : 'Novo lançamento eventual'}
                 </ModalTitle>
-                <CloseBtn onClick={closeModal}>✕</CloseBtn>
+                <CloseBtn onClick={closeModal}><Icon name="close" size={16} /></CloseBtn>
               </ModalHeader>
 
               {loadingCategorias ? (

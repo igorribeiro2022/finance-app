@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import Icon from '../../components/Icon';
 import {
   getCasa, postCasa, deleteCasa, postCasaSair,
   getCasaDashboard, getCasaLancamentos, getCasaMetas, postCasaMeta,
@@ -78,6 +79,35 @@ const fmtKpi = (def, val) => {
   return String(val);
 };
 
+const CASA_KPI_ALIASES = {
+  patrimonio_liquido: 'kpi_01_patrimonio_liquido',
+  taxa_poupanca: 'kpi_02_taxa_poupanca',
+  taxa_investimento: 'kpi_03_taxa_investimento',
+  reserva_emergencia_meses: 'kpi_04_reserva_emergencia_meses',
+  indice_liquidez_basica: 'kpi_05_liquidez_basica',
+  liquidez_sobre_patrimonio: 'kpi_06_liquidez_patrimonio',
+  fluxo_caixa_mensal: 'kpi_07_fluxo_caixa_mensal',
+  margem_sobra_mensal: 'kpi_08_margem_sobra_mensal',
+  indice_despesas_fixas: 'kpi_09_indice_despesas_fixas',
+  indice_despesas_essenciais: 'kpi_10_despesas_essenciais',
+  indice_despesas_discricionarias: 'kpi_11_despesas_discricionarias',
+  divida_sobre_renda: 'kpi_12_dti',
+  divida_total_sobre_ativos: 'kpi_13_divida_sobre_ativos',
+  divida_total_sobre_patrimonio: 'kpi_14_divida_sobre_patrimonio',
+  custo_da_divida: 'kpi_15_custo_divida',
+  comprometimento_moradia: 'kpi_16_comprometimento_moradia',
+  cobertura_divida_por_caixa: 'kpi_17_cobertura_divida_caixa',
+  indice_solvencia: 'kpi_18_indice_solvencia',
+  percentual_investido_patrimonio: 'kpi_19_percentual_investido',
+  progresso_metas: 'kpi_20_progresso_metas',
+};
+
+const getCasaKpiValue = (kpis, key) => {
+  const value = kpis?.[key] ?? kpis?.[CASA_KPI_ALIASES[key]];
+  if (value && typeof value === 'object' && !Array.isArray(value)) return value.valor;
+  return value;
+};
+
 const kpiRating = (def, val) => {
   if (val == null) return 'na';
   const n = Number(val);
@@ -91,7 +121,7 @@ const kpiRating = (def, val) => {
   return 'na';
 };
 
-const ratingLabel = { good: '✓ Bom', neutral: '~ Atenção', bad: '⚠ Crítico', na: '—' };
+const ratingLabel = { good: 'Bom', neutral: 'Atencao', bad: 'Critico', na: '-' };
 
 /* ── skeleton helper ─────────────────────────────────────────── */
 const SkeletonCard = ({ rows = 3 }) => (
@@ -423,7 +453,7 @@ export default function Casa() {
   /* ── render: sem casa ──────────────────────────────────────── */
   const renderNoCasa = () => (
     <NoCasaWrapper>
-      <NoCasaIcon>🏠</NoCasaIcon>
+      <NoCasaIcon><Icon name="home" size={46} /></NoCasaIcon>
       <NoCasaTitle>Você ainda não tem uma Casa</NoCasaTitle>
       <NoCasaDesc>
         Crie uma Casa para compartilhar finanças com sua família ou aceite
@@ -442,7 +472,7 @@ export default function Casa() {
     <>
       {/* Insight */}
       <InsightHero>
-        <InsightIcon>🏡</InsightIcon>
+        <InsightIcon><Icon name="home" size={30} /></InsightIcon>
         <InsightText>
           <InsightTitle>
             {dashboard
@@ -474,7 +504,7 @@ export default function Casa() {
           </KpiGrid>
         ) : !dashboard ? (
           <EmptyState>
-            <EmptyIcon>📊</EmptyIcon>
+            <EmptyIcon><Icon name="chart" size={36} /></EmptyIcon>
             <EmptyTitle>Nenhum dado disponível</EmptyTitle>
             <EmptyDesc>
               As KPIs serão calculadas conforme os membros registrarem seus dados de patrimônio.
@@ -483,7 +513,7 @@ export default function Casa() {
         ) : (
           <KpiGrid>
             {KPI_DEFS.map((def) => {
-              const val = kpis[def.key];
+              const val = getCasaKpiValue(kpis, def.key);
               const rating = kpiRating(def, val);
               return (
                 <KpiCard key={def.key}>
@@ -546,7 +576,7 @@ export default function Casa() {
             <SkeletonCard rows={5} />
           ) : !lancamentosCasa || totalLancamentos === 0 ? (
             <EmptyState>
-              <EmptyIcon>R$</EmptyIcon>
+              <EmptyIcon><Icon name="wallet" size={36} /></EmptyIcon>
               <EmptyTitle>Nenhum lancamento encontrado</EmptyTitle>
               <EmptyDesc>
                 Quando os membros registrarem ganhos ou gastos fixos/eventuais,
@@ -644,7 +674,7 @@ export default function Casa() {
           <SkeletonCard rows={3} />
         ) : membros.length === 0 ? (
           <EmptyState>
-            <EmptyIcon>👥</EmptyIcon>
+            <EmptyIcon><Icon name="people" size={36} /></EmptyIcon>
             <EmptyTitle>Nenhum membro encontrado</EmptyTitle>
             <EmptyDesc>Convide pessoas para participar da sua Casa.</EmptyDesc>
           </EmptyState>
@@ -661,7 +691,7 @@ export default function Casa() {
                     <MemberName>{nome}{isMe && ' (você)'}</MemberName>
                     <MemberEmail>{email}</MemberEmail>
                   </MemberInfo>
-                  <MemberRole role={m.papel}>{m.papel === 'dono' ? '👑 Dono' : 'Membro'}</MemberRole>
+                  <MemberRole role={m.papel}>{m.papel === 'dono' ? 'Dono' : 'Membro'}</MemberRole>
                   {isDono && !isMe && (
                     <DangerBtn
                       onClick={() => setConfirmRemoveMembro(m)}
@@ -692,7 +722,7 @@ export default function Casa() {
           <SkeletonCard rows={4} />
         ) : metas.length === 0 ? (
           <EmptyState>
-            <EmptyIcon>🎯</EmptyIcon>
+            <EmptyIcon><Icon name="trend" size={36} /></EmptyIcon>
             <EmptyTitle>Nenhuma meta cadastrada</EmptyTitle>
             <EmptyDesc>
               Defina metas coletivas para a Casa acompanhar o progresso juntos.
@@ -799,7 +829,7 @@ export default function Casa() {
         <>
           {/* Banner informativo */}
           <CasaBanner>
-            <CasaIconBig>🏠</CasaIconBig>
+            <CasaIconBig><Icon name="home" size={24} /></CasaIconBig>
             <CasaInfoText>
               <CasaNome>{casa.nome}</CasaNome>
               <CasaMeta>
