@@ -2,7 +2,9 @@ import axios from 'axios';
 import { store } from '../store';
 import { updateAccessToken, logout } from '../store/authSlice';
 
-const BASE_URL = 'https://web-production-defc2.up.railway.app';
+const API_URL = 'https://web-production-defc2.up.railway.app';
+const BASE_URL = process.env.REACT_APP_API_URL
+  || (process.env.NODE_ENV === 'production' ? '/api' : API_URL);
 
 const api = axios.create({
   baseURL: BASE_URL,

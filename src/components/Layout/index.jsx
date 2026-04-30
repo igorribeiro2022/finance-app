@@ -3,10 +3,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
-import { setThemeMode, setThemePalette, toggleSidebar } from '../../store/uiSlice';
+import { setThemePalette, toggleSidebar, toggleTheme } from '../../store/uiSlice';
 import { logout } from '../../store/authSlice';
 import api from '../../services/api';
-import { themeModeOptions, themePaletteOptions } from '../../styles/theme';
+import { themePaletteOptions } from '../../styles/theme';
 
 import {
   Wrapper,
@@ -19,11 +19,12 @@ import {
   Topbar,
   TopbarLeft,
   TopbarRight,
-  FieldIcon,
-  ThemeField,
-  ThemeLabel,
-  ThemeSelect,
+  ThemeControls,
+  PaletteSwatches,
+  PaletteButton,
+  ModeToggle,
   UserMenu,
+  UserAvatar,
   UserName,
   PageContent,
   Overlay,
@@ -32,15 +33,16 @@ import {
 } from './styles';
 
 const navItems = [
-  { to: '/', label: 'Dashboard', icon: '▦' },
-  { to: '/categorias', label: 'Categorias', icon: '◌' },
-  { to: '/gastos-fixos', label: 'Gastos Fixos', icon: '↓' },
-  { to: '/ganhos-fixos', label: 'Ganhos Fixos', icon: '↑' },
-  { to: '/eventuais', label: 'Eventuais', icon: '◎' },
-  { to: '/calendario', label: 'Calendário', icon: '▣' },
-  { to: '/vista-bancaria', label: 'Bancos', icon: '◈' },
-  { to: '/casa', label: 'Casa', icon: '⌂' },
-  { to: '/open-finance', label: 'Open Finance', icon: '⟳' },
+  { to: '/', label: 'Dashboard', icon: 'D' },
+  { to: '/categorias', label: 'Categorias', icon: 'C' },
+  { to: '/gastos-fixos', label: 'Gastos Fixos', icon: '-' },
+  { to: '/ganhos-fixos', label: 'Ganhos Fixos', icon: '+' },
+  { to: '/eventuais', label: 'Eventuais', icon: '*' },
+  { to: '/calendario', label: 'Calendario', icon: 'Q' },
+  { to: '/vista-bancaria', label: 'Bancos', icon: 'B' },
+  { to: '/casa', label: 'Casa', icon: 'H' },
+  { to: '/open-finance', label: 'Open Finance', icon: 'O' },
+  { to: '/perfil', label: 'Perfil', icon: 'P' },
 ];
 
 export default function Layout({ children }) {
@@ -53,12 +55,16 @@ export default function Layout({ children }) {
   const themePalette = themePaletteOptions.some((palette) => palette.value === ui.themePalette)
     ? ui.themePalette
     : 'emerald';
-  const themeMode = themeModeOptions.some((option) => option.value === ui.themeMode)
-    ? ui.themeMode
-    : 'dark';
+  const themeMode = ui.themeMode === 'light' ? 'light' : 'dark';
   const sidebarOpen = !!ui.sidebarOpen;
   const user = auth.user || null;
   const refreshToken = auth.refreshToken || '';
+  const userInitials = (user?.nome || user?.email || 'U')
+    .split(' ')
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join('')
+    .toUpperCase();
 
   const closeSidebar = () => {
     if (sidebarOpen) {
@@ -72,7 +78,7 @@ export default function Layout({ children }) {
         await api.post('/auth/logout/', { refresh: refreshToken });
       }
     } catch (_) {
-      // ignora erro de logout remoto
+      // Ignora erro de logout remoto.
     } finally {
       dispatch(logout());
       navigate('/login', { replace: true });
@@ -99,7 +105,7 @@ export default function Layout({ children }) {
             aria-label="Fechar menu"
             type="button"
           >
-            ✕
+            x
           </CollapseButton>
         </SidebarHeader>
 
@@ -120,7 +126,7 @@ export default function Layout({ children }) {
 
         <SidebarFooter>
           <LogoutButton onClick={handleLogout} type="button">
-            <span className="icon">↩</span>
+            <span className="icon">S</span>
             <span>Sair</span>
           </LogoutButton>
         </SidebarFooter>
@@ -134,43 +140,34 @@ export default function Layout({ children }) {
               aria-label="Abrir menu"
               type="button"
             >
-              ☰
+              =
             </CollapseButton>
           </TopbarLeft>
 
           <TopbarRight>
-            <ThemeField>
-              <ThemeLabel aria-hidden="true" />
-              <ThemeSelect
-                aria-label="Selecionar paleta"
-                value={themePalette}
-                onChange={(event) => dispatch(setThemePalette(event.target.value))}
-              >
+            <ThemeControls>
+              <PaletteSwatches aria-label="Selecionar paleta">
                 {themePaletteOptions.map((palette) => (
-                  <option key={palette.value} value={palette.value}>
-                    {palette.label}
-                  </option>
+                  <PaletteButton
+                    key={palette.value}
+                    type="button"
+                    title={palette.label}
+                    aria-label={`Usar paleta ${palette.label}`}
+                    $active={themePalette === palette.value}
+                    $primary={palette.primary}
+                    $secondary={palette.secondary}
+                    onClick={() => dispatch(setThemePalette(palette.value))}
+                  />
                 ))}
-              </ThemeSelect>
-            </ThemeField>
+              </PaletteSwatches>
+              <ModeToggle type="button" onClick={() => dispatch(toggleTheme())}>
+                {themeMode === 'dark' ? 'Dark' : 'Light'}
+              </ModeToggle>
+            </ThemeControls>
 
-            <ThemeField>
-              <FieldIcon aria-hidden="true">{themeMode === 'dark' ? '☾' : '☀'}</FieldIcon>
-              <ThemeSelect
-                aria-label="Selecionar modo de cor"
-                value={themeMode}
-                onChange={(event) => dispatch(setThemeMode(event.target.value))}
-              >
-                {themeModeOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </ThemeSelect>
-            </ThemeField>
-
-            <UserMenu>
-              <UserName>{user?.nome?.split(' ')[0] ?? 'Usuário'}</UserName>
+            <UserMenu as={NavLink} to="/perfil">
+              <UserAvatar>{userInitials}</UserAvatar>
+              <UserName>{user?.nome?.split(' ')[0] ?? 'Usuario'}</UserName>
             </UserMenu>
           </TopbarRight>
         </Topbar>

@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import {
   getCasa, postCasa, deleteCasa, postCasaSair,
-  getCasaDashboard, getCasaMetas, postCasaMeta,
+  getCasaDashboard, getCasaLancamentos, getCasaMetas, postCasaMeta,
   patchCasaMeta, deleteCasaMeta, postConvite, deleteCasaMembro,
 } from '../../services/casa';
 import { buildCasaInviteUrl } from '../../utils/casaInvite';
@@ -15,6 +15,10 @@ import {
   MemberList, MemberItem, MemberAvatar, MemberInfo, MemberName, MemberEmail, MemberRole,
   MetaList, MetaItem, MetaHeader, MetaName, MetaValues, MetaProgressBar, MetaDeadline, MetaActions,
   AgendaList, AgendaItem, AgendaDesc, AgendaBadge, AgendaValue,
+  MovementToolbar, MonthControl, SummaryGrid, SummaryCard, SummaryLabel, SummaryValue,
+  MemberMovementGroup, MemberMovementHeader, MemberMovementTitle, MemberMovementStats,
+  MovementList, MovementItem, MovementMain, MovementTitle, MovementMeta,
+  MovementBadges, MovementBadge, MovementValue,
   CasaBanner, CasaIconBig, CasaInfoText, CasaNome, CasaMeta,
   NoCasaWrapper, NoCasaIcon, NoCasaTitle, NoCasaDesc, NoCasaActions,
   EmptyState, EmptyIcon, EmptyTitle, EmptyDesc,
@@ -102,6 +106,7 @@ const SkeletonCard = ({ rows = 3 }) => (
 /* ── tabs ────────────────────────────────────────────────────── */
 const TABS = [
   { key: 'painel',  label: 'Painel' },
+  { key: 'lancamentos', label: 'Lancamentos' },
   { key: 'membros', label: 'Membros' },
   { key: 'metas',   label: 'Metas' },
 ];
@@ -119,11 +124,17 @@ export default function Casa() {
   const [casa,      setCasa]      = useState(null);
   const [membros,   setMembros]   = useState([]);
   const [dashboard, setDashboard] = useState(null);
+  const [lancamentosCasa, setLancamentosCasa] = useState(null);
   const [metas,     setMetas]     = useState([]);
+  const [periodoLancamentos, setPeriodoLancamentos] = useState(() => {
+    const hoje = new Date();
+    return { mes: hoje.getMonth() + 1, ano: hoje.getFullYear() };
+  });
 
   /* loading por seção */
   const [loadingCasa,      setLoadingCasa]      = useState(true);
   const [loadingDashboard, setLoadingDashboard] = useState(true);
+  const [loadingLancamentos, setLoadingLancamentos] = useState(true);
   const [loadingMetas,     setLoadingMetas]     = useState(true);
 
   /* ações */
@@ -163,6 +174,7 @@ export default function Casa() {
       if (e?.response?.status === 404) {
         setCasa(null);
         setMembros([]);
+        setLancamentosCasa(null);
       } else {
         setError('Erro ao carregar dados da Casa.');
       }
@@ -182,6 +194,18 @@ export default function Casa() {
       setLoadingDashboard(false);
     }
   }, []);
+
+  const loadLancamentos = useCallback(async () => {
+    try {
+      setLoadingLancamentos(true);
+      const res = await getCasaLancamentos(periodoLancamentos);
+      setLancamentosCasa(res.data);
+    } catch {
+      setLancamentosCasa(null);
+    } finally {
+      setLoadingLancamentos(false);
+    }
+  }, [periodoLancamentos]);
 
   const loadMetas = useCallback(async () => {
     try {
@@ -203,8 +227,9 @@ export default function Casa() {
   useEffect(() => {
     if (!casa) return;
     loadDashboard();
+    loadLancamentos();
     loadMetas();
-  }, [casa, loadDashboard, loadMetas]);
+  }, [casa, loadDashboard, loadLancamentos, loadMetas]);
 
   /* ── ações de Casa ─────────────────────────────────────────── */
   const handleCriarCasa = useCallback(async () => {
@@ -233,6 +258,7 @@ export default function Casa() {
       setCasa(null);
       setMembros([]);
       setDashboard(null);
+      setLancamentosCasa(null);
       setMetas([]);
       setSuccess('Casa encerrada.');
     } catch {
@@ -251,6 +277,7 @@ export default function Casa() {
       setCasa(null);
       setMembros([]);
       setDashboard(null);
+      setLancamentosCasa(null);
       setMetas([]);
       setSuccess('Você saiu da Casa.');
     } catch {
@@ -374,6 +401,17 @@ export default function Casa() {
   }, [dashboard]);
 
   const totalMembros = membros.length;
+  const periodoLabel = useMemo(() => {
+    const data = new Date(periodoLancamentos.ano, periodoLancamentos.mes - 1, 1);
+    return data.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  }, [periodoLancamentos]);
+
+  const handlePeriodoDelta = useCallback((delta) => {
+    setPeriodoLancamentos((atual) => {
+      const data = new Date(atual.ano, atual.mes - 1 + delta, 1);
+      return { mes: data.getMonth() + 1, ano: data.getFullYear() };
+    });
+  }, []);
 
   /* limpa feedback após 3s */
   useEffect(() => {
@@ -481,6 +519,116 @@ export default function Casa() {
   );
 
   /* ── render: membros ───────────────────────────────────────── */
+  const renderLancamentos = () => {
+    const resumo = lancamentosCasa?.resumo ?? {};
+    const grupos = lancamentosCasa?.por_membro ?? [];
+    const totalLancamentos = Number(resumo.total_lancamentos) || 0;
+
+    return (
+      <FullWidthCard as="div">
+        <Card>
+          <CardHeader>
+            <CardTitle>Ganhos e gastos da Casa</CardTitle>
+            {loadingLancamentos && <SpinnerIcon />}
+          </CardHeader>
+
+          <MovementToolbar>
+            <SecondaryBtn type="button" onClick={() => handlePeriodoDelta(-1)}>
+              Mes anterior
+            </SecondaryBtn>
+            <MonthControl>{periodoLabel}</MonthControl>
+            <SecondaryBtn type="button" onClick={() => handlePeriodoDelta(1)}>
+              Proximo mes
+            </SecondaryBtn>
+          </MovementToolbar>
+
+          {loadingLancamentos ? (
+            <SkeletonCard rows={5} />
+          ) : !lancamentosCasa || totalLancamentos === 0 ? (
+            <EmptyState>
+              <EmptyIcon>R$</EmptyIcon>
+              <EmptyTitle>Nenhum lancamento encontrado</EmptyTitle>
+              <EmptyDesc>
+                Quando os membros registrarem ganhos ou gastos fixos/eventuais,
+                tudo aparecera aqui consolidado por pessoa.
+              </EmptyDesc>
+            </EmptyState>
+          ) : (
+            <>
+              <SummaryGrid>
+                <SummaryCard>
+                  <SummaryLabel>Ganhos fixos</SummaryLabel>
+                  <SummaryValue positive>{formatBRL(resumo.total_ganhos_fixos)}</SummaryValue>
+                </SummaryCard>
+                <SummaryCard>
+                  <SummaryLabel>Ganhos eventuais</SummaryLabel>
+                  <SummaryValue positive>{formatBRL(resumo.total_ganhos_eventuais)}</SummaryValue>
+                </SummaryCard>
+                <SummaryCard>
+                  <SummaryLabel>Gastos fixos</SummaryLabel>
+                  <SummaryValue negative>{formatBRL(resumo.total_gastos_fixos)}</SummaryValue>
+                </SummaryCard>
+                <SummaryCard>
+                  <SummaryLabel>Gastos eventuais</SummaryLabel>
+                  <SummaryValue negative>{formatBRL(resumo.total_gastos_eventuais)}</SummaryValue>
+                </SummaryCard>
+                <SummaryCard>
+                  <SummaryLabel>Saldo da Casa</SummaryLabel>
+                  <SummaryValue positive={Number(resumo.saldo) >= 0} negative={Number(resumo.saldo) < 0}>
+                    {formatBRL(resumo.saldo)}
+                  </SummaryValue>
+                </SummaryCard>
+              </SummaryGrid>
+
+              {grupos.map((grupo) => (
+                <MemberMovementGroup key={grupo.membro.id}>
+                  <MemberMovementHeader>
+                    <MemberMovementTitle>
+                      <MemberAvatar>{avatarInitials(grupo.membro.nome)}</MemberAvatar>
+                      <div>
+                        <MemberName>{grupo.membro.nome}</MemberName>
+                        <MemberEmail>{grupo.membro.email}</MemberEmail>
+                      </div>
+                    </MemberMovementTitle>
+                    <MemberMovementStats>
+                      <span>Ganhos: <strong>{formatBRL(grupo.resumo.total_ganhos)}</strong></span>
+                      <span>Gastos: <strong>{formatBRL(grupo.resumo.total_gastos)}</strong></span>
+                      <span>Saldo: <strong>{formatBRL(grupo.resumo.saldo)}</strong></span>
+                    </MemberMovementStats>
+                  </MemberMovementHeader>
+
+                  {grupo.lancamentos.length === 0 ? (
+                    <EmptyDesc>Sem lancamentos neste periodo.</EmptyDesc>
+                  ) : (
+                    <MovementList>
+                      {grupo.lancamentos.map((item) => (
+                        <MovementItem key={`${item.subtipo}-${item.id}`}>
+                          <MovementMain>
+                            <MovementTitle>{item.descricao}</MovementTitle>
+                            <MovementMeta>
+                              {formatDate(item.data)} · {item.categoria || 'Sem categoria'}
+                            </MovementMeta>
+                            <MovementBadges>
+                              <MovementBadge type={item.tipo}>{item.tipo === 'ganho' ? 'Ganho' : 'Gasto'}</MovementBadge>
+                              <MovementBadge>{item.origem === 'fixo' ? 'Fixo' : 'Eventual'}</MovementBadge>
+                            </MovementBadges>
+                          </MovementMain>
+                          <MovementValue type={item.tipo}>
+                            {item.tipo === 'gasto' ? '-' : '+'}{formatBRL(item.valor)}
+                          </MovementValue>
+                        </MovementItem>
+                      ))}
+                    </MovementList>
+                  )}
+                </MemberMovementGroup>
+              ))}
+            </>
+          )}
+        </Card>
+      </FullWidthCard>
+    );
+  };
+
   const renderMembros = () => (
     <FullWidthCard as="div">
       <Card>
@@ -673,9 +821,10 @@ export default function Casa() {
             ))}
           </TabBar>
 
-          {activeTab === 'painel'  && renderPainel()}
-          {activeTab === 'membros' && renderMembros()}
-          {activeTab === 'metas'   && renderMetas()}
+          {activeTab === 'painel'       && renderPainel()}
+          {activeTab === 'lancamentos' && renderLancamentos()}
+          {activeTab === 'membros'      && renderMembros()}
+          {activeTab === 'metas'        && renderMetas()}
         </>
       )}
 

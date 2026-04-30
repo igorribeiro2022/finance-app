@@ -12,6 +12,7 @@ import Calendario from '../pages/Calendario';
 import VistaBancaria from '../pages/VistaBancaria';
 import Casa from '../pages/Casa';
 import OpenFinance from '../pages/OpenFinance';
+import Perfil from '../pages/Perfil';
 import Categorias from '../pages/Categorias';
 import ConviteCasa from '../pages/ConviteCasa';
 import Login from '../pages/Login';
@@ -75,6 +76,7 @@ function AppRoutes() {
         <Route path="/vista-bancaria" element={<VistaBancaria />} />
         <Route path="/casa" element={<Casa />} />
         <Route path="/open-finance" element={<OpenFinance />} />
+        <Route path="/perfil" element={<Perfil />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

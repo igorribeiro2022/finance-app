@@ -5,6 +5,7 @@ export const postCasa           = (body)     => api.post('/casa/', body);
 export const deleteCasa         = ()         => api.delete('/casa/');
 export const postCasaSair       = ()         => api.post('/casa/sair/');
 export const getCasaDashboard   = ()         => api.get('/casa/dashboard/');
+export const getCasaLancamentos = (params)   => api.get('/casa/lancamentos/', { params });
 export const getCasaMetas       = ()         => api.get('/casa/metas/');
 export const postCasaMeta       = (body)     => api.post('/casa/metas/', body);
 export const patchCasaMeta      = (id, body) => api.patch(`/casa/metas/${id}/`, body);

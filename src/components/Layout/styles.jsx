@@ -188,6 +188,54 @@ export const CollapseButton = styled.button`
   }
 `;
 
+export const ThemeControls = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem;
+  border-radius: ${({ theme }) => theme.radius.full};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  box-shadow: inset 0 1px 0 ${({ theme }) => theme.colors.glassHighlight};
+`;
+
+export const PaletteSwatches = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+`;
+
+export const PaletteButton = styled.button`
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid ${({ $active, theme }) => $active ? theme.colors.text : theme.colors.glassBorder};
+  background: linear-gradient(135deg, ${({ $primary }) => $primary} 0%, ${({ $secondary }) => $secondary} 100%);
+  box-shadow: ${({ $active, theme }) => $active ? `0 0 0 3px ${theme.colors.primaryHighlight}` : 'none'};
+  transition: ${({ theme }) => theme.transition};
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+`;
+
+export const ModeToggle = styled.button`
+  min-width: 56px;
+  padding: 0.35rem 0.65rem;
+  border-radius: ${({ theme }) => theme.radius.full};
+  background: ${({ theme }) => theme.colors.surfaceOffset};
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  transition: ${({ theme }) => theme.transition};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primaryHighlight};
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
 export const ThemeField = styled.label`
   display: flex;
   align-items: center;
@@ -240,6 +288,26 @@ export const UserMenu = styled.div`
   border-radius: ${({ theme }) => theme.radius.full};
   background: ${({ theme }) => theme.colors.surface};
   border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  color: ${({ theme }) => theme.colors.text};
+  text-decoration: none;
+  transition: ${({ theme }) => theme.transition};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceOffset};
+  }
+`;
+
+export const UserAvatar = styled.span`
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: ${({ theme }) => theme.colors.primaryHighlight};
+  color: ${({ theme }) => theme.colors.primary};
+  font-size: 0.7rem;
+  font-weight: 800;
 `;
 
 export const UserName = styled.span`

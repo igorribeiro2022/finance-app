@@ -398,6 +398,168 @@ export const AgendaValue = styled.div`
 `;
 
 /* ── banner da casa ─────────────────────────────────────────── */
+export const MovementToolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+`;
+
+export const MonthControl = styled.div`
+  min-width: 180px;
+  padding: 0.55rem 1rem;
+  border-radius: 999px;
+  background: ${({ theme }) => theme.colors.surfaceOffset};
+  border: 1px solid ${({ theme }) => theme.border};
+  color: ${({ theme }) => theme.text};
+  font-size: 0.875rem;
+  font-weight: 700;
+  text-align: center;
+  text-transform: capitalize;
+`;
+
+export const SummaryGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+`;
+
+export const SummaryCard = styled.div`
+  ${glassPanelElevated}
+  border-radius: 12px;
+  padding: 0.9rem;
+`;
+
+export const SummaryLabel = styled.div`
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: ${({ theme }) => theme.textMuted};
+  margin-bottom: 0.25rem;
+`;
+
+export const SummaryValue = styled.div`
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: ${({ theme, positive, negative }) => {
+    if (positive) return theme.colors.success;
+    if (negative) return theme.colors.error;
+    return theme.text;
+  }};
+`;
+
+export const MemberMovementGroup = styled.div`
+  ${glassPanelElevated}
+  border-radius: 14px;
+  padding: 1rem;
+  margin-top: 0.75rem;
+`;
+
+export const MemberMovementHeader = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 0.75rem;
+  flex-wrap: wrap;
+`;
+
+export const MemberMovementTitle = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+`;
+
+export const MemberMovementStats = styled.div`
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  color: ${({ theme }) => theme.textMuted};
+  font-size: 0.78rem;
+
+  strong {
+    color: ${({ theme }) => theme.text};
+    font-variant-numeric: tabular-nums;
+  }
+`;
+
+export const MovementList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+`;
+
+export const MovementItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem;
+  border: 1px solid ${({ theme }) => theme.border};
+  border-radius: 12px;
+  background: ${({ theme }) => theme.colors.surface};
+
+  @media (max-width: 640px) {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+`;
+
+export const MovementMain = styled.div`
+  min-width: 0;
+  flex: 1;
+`;
+
+export const MovementTitle = styled.div`
+  color: ${({ theme }) => theme.text};
+  font-size: 0.9rem;
+  font-weight: 700;
+`;
+
+export const MovementMeta = styled.div`
+  color: ${({ theme }) => theme.textMuted};
+  font-size: 0.76rem;
+  margin-top: 0.15rem;
+`;
+
+export const MovementBadges = styled.div`
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  margin-top: 0.45rem;
+`;
+
+export const MovementBadge = styled.span`
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: ${({ theme, type }) => {
+    if (type === 'ganho') return `${theme.colors.success}18`;
+    if (type === 'gasto') return `${theme.colors.error}18`;
+    return theme.colors.surfaceOffset;
+  }};
+  color: ${({ theme, type }) => {
+    if (type === 'ganho') return theme.colors.success;
+    if (type === 'gasto') return theme.colors.error;
+    return theme.textMuted;
+  }};
+`;
+
+export const MovementValue = styled.div`
+  font-size: 1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: ${({ theme, type }) => type === 'ganho' ? theme.colors.success : theme.colors.error};
+  white-space: nowrap;
+`;
+
 export const CasaBanner = styled.div`
   ${glassPanelElevated}
   display: flex;

@@ -14,7 +14,7 @@ import {
   DetailItemDesc, DetailItemMeta, DetailItemValue,
   EmptyState, SkeletonCell, ErrorBanner,
   Legend, LegendItem, LegendDot,
-  PageTitle, PageSubtitle,
+  PageTitle,
 } from './styles.jsx';
 
 const MESES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho',
@@ -94,16 +94,14 @@ export default function Calendario() {
     }
   }, [view, ano, load, mes]);
 
-  const currentMap = eventosMap[`${ano}-${mes}`] || {};
-
-  function getEventsForDate(y, m, d) {
+  const getEventsForDate = useCallback((y, m, d) => {
     const key = dateKey(y, m, d);
     const mapKey = `${y}-${m}`;
     const map = eventosMap[mapKey] || {};
     const events = map[key] || [];
     if (filter === 'all') return events;
     return events.filter((e) => getTipoColor(e.tipo) === (filter === 'income' ? 'income' : 'expense'));
-  }
+  }, [eventosMap, filter]);
 
   const todayStr = dateKey(today.getFullYear(), today.getMonth() + 1, today.getDate());
 
@@ -191,7 +189,7 @@ export default function Calendario() {
     if (!selectedDay) return [];
     const [sy, sm, sd] = selectedDay.split('-').map(Number);
     return getEventsForDate(sy, sm, sd);
-  }, [selectedDay, eventosMap, filter]);
+  }, [selectedDay, getEventsForDate]);
 
   return (
     <Wrapper>

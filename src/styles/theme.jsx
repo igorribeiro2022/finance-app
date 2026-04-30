@@ -148,6 +148,8 @@ function getContrastText(hex, light = '#F8FAFC', dark = '#081018') {
 export const themePaletteOptions = Object.entries(themePalettes).map(([value, palette]) => ({
   value,
   label: palette.label,
+  primary: palette.primary,
+  secondary: palette.secondary,
 }));
 
 export const themeModeOptions = [

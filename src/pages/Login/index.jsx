@@ -64,7 +64,12 @@ export default function Login() {
       dispatch(setCredentials(response.data));
       navigate('/');
     } catch (err) {
-      setApiError('E-mail ou senha incorretos.');
+      if (!err.response) {
+        setApiError('Não foi possível conectar ao servidor. Tente novamente em instantes.');
+        return;
+      }
+
+      setApiError(err.response?.data?.detail || 'E-mail ou senha incorretos.');
     }
   };
 
