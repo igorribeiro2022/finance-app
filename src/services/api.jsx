@@ -8,9 +8,6 @@ const BASE_URL = process.env.REACT_APP_API_URL
 
 const api = axios.create({
   baseURL: BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 let isRefreshing = false;
@@ -27,10 +24,27 @@ function processQueue(error, token = null) {
 api.interceptors.request.use(
   (config) => {
     const token = store.getState().auth?.accessToken;
+    const isFormData = typeof FormData !== 'undefined' && config.data instanceof FormData;
+
+    config.headers = config.headers || {};
 
     if (token) {
-      config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    if (isFormData) {
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+      } else {
+        delete config.headers['Content-Type'];
+        delete config.headers['content-type'];
+      }
+    } else if (!config.headers['Content-Type'] && !config.headers['content-type']) {
+      if (typeof config.headers.set === 'function') {
+        config.headers.set('Content-Type', 'application/json');
+      } else {
+        config.headers['Content-Type'] = 'application/json';
+      }
     }
 
     return config;

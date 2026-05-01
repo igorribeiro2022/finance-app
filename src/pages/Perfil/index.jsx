@@ -1,8 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useSearchParams } from 'react-router-dom';
 
 import { getAccounts, getConsents } from '../../services/openfinance';
 import Icon from '../../components/Icon';
+import Categorias from '../Categorias';
 import { deleteAvatar, getMe, patchMe, uploadAvatar } from '../../services/user';
 import { updateUser } from '../../store/authSlice';
 import { setThemeMode, setThemePalette } from '../../store/uiSlice';
@@ -36,9 +38,13 @@ import {
   SecondaryButton,
   SectionStack,
   HiddenFileInput,
+  ProfileContent,
   ToggleGrid,
   ToggleInput,
   ToggleRow,
+  ProfileLayout,
+  ProfileNav,
+  ProfileNavButton,
 } from './styles';
 
 const DEFAULT_NOTIFICACOES = {
@@ -47,6 +53,14 @@ const DEFAULT_NOTIFICACOES = {
   alertas_bancarios: true,
   casa: true,
 };
+
+const PROFILE_SECTIONS = [
+  { key: 'conta', label: 'Conta', icon: 'user', description: 'Dados pessoais e foto de perfil.' },
+  { key: 'preferencias', label: 'Preferencias', icon: 'settings', description: 'Tema, paleta, moeda e idioma.' },
+  { key: 'notificacoes', label: 'Notificacoes', icon: 'alert', description: 'Alertas e resumos que voce quer receber.' },
+  { key: 'bancos', label: 'Bancos', icon: 'bank', description: 'Conexoes de Open Finance.' },
+  { key: 'categorias', label: 'Categorias', icon: 'categories', description: 'Categorias padrao e personalizadas.' },
+];
 
 const normalizeList = (payload) => {
   if (Array.isArray(payload)) return payload;
@@ -69,6 +83,7 @@ const getApiError = (error, fallback) => {
 
 export default function Perfil() {
   const dispatch = useDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
   const authUser = useSelector((state) => state.auth?.user);
   const themeMode = useSelector((state) => state.ui?.themeMode === 'light' ? 'light' : 'dark');
   const themePalette = useSelector((state) => state.ui?.themePalette || 'emerald');
@@ -92,6 +107,10 @@ export default function Perfil() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [activeSection, setActiveSection] = useState(() => {
+    const section = searchParams.get('secao');
+    return PROFILE_SECTIONS.some((item) => item.key === section) ? section : 'conta';
+  });
 
   const loadProfile = useCallback(async () => {
     try {
@@ -152,6 +171,13 @@ export default function Perfil() {
   }, [loadProfile, loadBankConnections]);
 
   useEffect(() => {
+    const section = searchParams.get('secao');
+    if (PROFILE_SECTIONS.some((item) => item.key === section) && section !== activeSection) {
+      setActiveSection(section);
+    }
+  }, [activeSection, searchParams]);
+
+  useEffect(() => {
     if (!success) return undefined;
     const timer = setTimeout(() => setSuccess(''), 3000);
     return () => clearTimeout(timer);
@@ -184,6 +210,11 @@ export default function Perfil() {
         [field]: !current.notificacoes[field],
       },
     }));
+  };
+
+  const handleSectionChange = (section) => {
+    setActiveSection(section);
+    setSearchParams(section === 'conta' ? {} : { secao: section });
   };
 
   const handleSave = async () => {
@@ -249,6 +280,226 @@ export default function Perfil() {
     }
   };
 
+  const currentSection = PROFILE_SECTIONS.find((item) => item.key === activeSection) || PROFILE_SECTIONS[0];
+
+  const renderSection = () => {
+    if (activeSection === 'categorias') {
+      return <Categorias />;
+    }
+
+    if (activeSection === 'preferencias') {
+      return (
+        <Card>
+          <CardTitle>Preferencias</CardTitle>
+          <FormGrid>
+            <FormGroup>
+              Tema
+              <FormSelect
+                value={form.preferencias.tema}
+                onChange={(event) => handlePreference('tema', event.target.value)}
+              >
+                {themeModeOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </FormSelect>
+            </FormGroup>
+            <FormGroup>
+              Paleta
+              <FormSelect
+                value={form.preferencias.paleta}
+                onChange={(event) => handlePreference('paleta', event.target.value)}
+              >
+                {themePaletteOptions.map((option) => (
+                  <option key={option.value} value={option.value}>{option.label}</option>
+                ))}
+              </FormSelect>
+            </FormGroup>
+            <FormGroup>
+              Moeda
+              <FormSelect
+                value={form.preferencias.moeda}
+                onChange={(event) => handlePreference('moeda', event.target.value)}
+              >
+                <option value="BRL">BRL - Real brasileiro</option>
+                <option value="USD">USD - Dolar</option>
+                <option value="EUR">EUR - Euro</option>
+              </FormSelect>
+            </FormGroup>
+            <FormGroup>
+              Idioma
+              <FormSelect
+                value={form.preferencias.idioma}
+                onChange={(event) => handlePreference('idioma', event.target.value)}
+              >
+                <option value="pt-BR">Portugues do Brasil</option>
+                <option value="en-US">English</option>
+              </FormSelect>
+            </FormGroup>
+          </FormGrid>
+          <Actions>
+            <PrimaryButton type="button" onClick={handleSave} disabled={saving || loading}>
+              {saving ? 'Salvando...' : 'Salvar preferencias'}
+            </PrimaryButton>
+          </Actions>
+        </Card>
+      );
+    }
+
+    if (activeSection === 'notificacoes') {
+      return (
+        <Card>
+          <CardTitle>Notificacoes</CardTitle>
+          <ToggleGrid>
+            <ToggleRow>
+              <div>
+                E-mails importantes
+                <span>Receber avisos de seguranca, convites e mudancas relevantes.</span>
+              </div>
+              <ToggleInput
+                type="checkbox"
+                checked={!!form.notificacoes.email}
+                onChange={() => handleNotification('email')}
+              />
+            </ToggleRow>
+            <ToggleRow>
+              <div>
+                Resumo semanal
+                <span>Um panorama curto da sua semana financeira.</span>
+              </div>
+              <ToggleInput
+                type="checkbox"
+                checked={!!form.notificacoes.resumo_semanal}
+                onChange={() => handleNotification('resumo_semanal')}
+              />
+            </ToggleRow>
+            <ToggleRow>
+              <div>
+                Alertas bancarios
+                <span>Sincronizacoes, consentimentos e conexoes Open Finance.</span>
+              </div>
+              <ToggleInput
+                type="checkbox"
+                checked={!!form.notificacoes.alertas_bancarios}
+                onChange={() => handleNotification('alertas_bancarios')}
+              />
+            </ToggleRow>
+            <ToggleRow>
+              <div>
+                Casa e familia
+                <span>Convites, membros e movimentacoes compartilhadas.</span>
+              </div>
+              <ToggleInput
+                type="checkbox"
+                checked={!!form.notificacoes.casa}
+                onChange={() => handleNotification('casa')}
+              />
+            </ToggleRow>
+          </ToggleGrid>
+          <Actions>
+            <PrimaryButton type="button" onClick={handleSave} disabled={saving || loading}>
+              {saving ? 'Salvando...' : 'Salvar notificacoes'}
+            </PrimaryButton>
+          </Actions>
+        </Card>
+      );
+    }
+
+    if (activeSection === 'bancos') {
+      return (
+        <ElevatedCard>
+          <CardTitle>Conexoes com bancos</CardTitle>
+          <BankGrid>
+            <BankMetric>
+              <MetricLabel>Consentimentos</MetricLabel>
+              <MetricValue>{activeConsents.length}</MetricValue>
+            </BankMetric>
+            <BankMetric>
+              <MetricLabel>Contas</MetricLabel>
+              <MetricValue>{accounts.length}</MetricValue>
+            </BankMetric>
+            <BankMetric>
+              <MetricLabel>Status</MetricLabel>
+              <MetricValue>{activeConsents.length > 0 ? 'OK' : '-'}</MetricValue>
+            </BankMetric>
+          </BankGrid>
+          <Actions>
+            <SecondaryLink to="/open-finance">Gerenciar Open Finance</SecondaryLink>
+          </Actions>
+        </ElevatedCard>
+      );
+    }
+
+    return (
+      <SectionStack>
+        <AvatarPanel>
+          <AvatarPreview>
+            {form.foto_perfil_url ? (
+              <img src={form.foto_perfil_url} alt="Foto de perfil" />
+            ) : (
+              <Icon name="user" size={42} />
+            )}
+          </AvatarPreview>
+          <div>
+            <ProfileName>{form.nome || 'Seu nome'}</ProfileName>
+            <ProfileEmail>{form.email || 'email@exemplo.com'}</ProfileEmail>
+          </div>
+          <AvatarActions>
+            <SecondaryButton as="label">
+              Alterar foto
+              <HiddenFileInput
+                type="file"
+                accept="image/png,image/jpeg,image/webp,image/gif"
+                onChange={handleAvatarUpload}
+              />
+            </SecondaryButton>
+            {form.foto_perfil_url && (
+              <SecondaryButton type="button" onClick={handleAvatarDelete}>
+                Remover
+              </SecondaryButton>
+            )}
+          </AvatarActions>
+        </AvatarPanel>
+
+        <Card>
+          <CardTitle>Dados pessoais</CardTitle>
+          <FormGrid>
+            <FormGroup>
+              Nome
+              <FormInput
+                value={form.nome}
+                onChange={(event) => handleField('nome', event.target.value)}
+                disabled={loading}
+              />
+            </FormGroup>
+            <FormGroup>
+              E-mail
+              <FormInput
+                type="email"
+                value={form.email}
+                onChange={(event) => handleField('email', event.target.value)}
+                disabled={loading}
+              />
+            </FormGroup>
+            <FormGroup>
+              Telefone
+              <FormInput
+                value={form.telefone}
+                placeholder="+55 11 99999-0000"
+                onChange={(event) => handleField('telefone', event.target.value)}
+                disabled={loading}
+              />
+            </FormGroup>
+          </FormGrid>
+          <Actions>
+            <PrimaryButton type="button" onClick={handleSave} disabled={saving || loading}>
+              {saving ? 'Salvando...' : 'Salvar dados'}
+            </PrimaryButton>
+          </Actions>
+        </Card>
+      </SectionStack>
+    );
+  };
+
   return (
     <PageWrapper>
       <PageHeader>
@@ -263,7 +514,33 @@ export default function Perfil() {
       {error && <Banner $type="error">{error}</Banner>}
       {success && <Banner>{success}</Banner>}
 
-      <ProfileGrid>
+      <ProfileLayout>
+        <ProfileNav>
+          {PROFILE_SECTIONS.map((section) => (
+            <ProfileNavButton
+              key={section.key}
+              type="button"
+              $active={activeSection === section.key}
+              onClick={() => handleSectionChange(section.key)}
+            >
+              <Icon name={section.icon} size={18} />
+              <span>{section.label}</span>
+            </ProfileNavButton>
+          ))}
+        </ProfileNav>
+
+        <ProfileContent>
+          <PageHeader>
+            <div>
+              <PageTitle>{currentSection.label}</PageTitle>
+              <PageSubtitle>{currentSection.description}</PageSubtitle>
+            </div>
+          </PageHeader>
+          {renderSection()}
+        </ProfileContent>
+      </ProfileLayout>
+
+      {false && (<ProfileGrid>
         <SectionStack>
           <AvatarPanel>
             <AvatarPreview>
@@ -453,7 +730,7 @@ export default function Perfil() {
             </Actions>
           </Card>
         </SectionStack>
-      </ProfileGrid>
+      </ProfileGrid>)}
     </PageWrapper>
   );
 }

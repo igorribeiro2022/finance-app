@@ -125,6 +125,23 @@ export const FullWidthCard = styled.div`
   margin-bottom: 1rem;
 `;
 
+export const PanelStack = styled.div`
+  display: flex;
+  flex-direction: column;
+
+  .casa-charts {
+    order: 1;
+  }
+
+  .casa-kpis {
+    order: 2;
+  }
+
+  .casa-agenda {
+    order: 3;
+  }
+`;
+
 export const ChartGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));

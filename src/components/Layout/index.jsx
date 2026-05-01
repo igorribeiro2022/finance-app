@@ -31,7 +31,6 @@ import {
 
 const navItems = [
   { to: '/', label: 'Dashboard', icon: 'dashboard' },
-  { to: '/categorias', label: 'Categorias', icon: 'categories' },
   { to: '/gastos-fixos', label: 'Gastos Fixos', icon: 'expense' },
   { to: '/ganhos-fixos', label: 'Ganhos Fixos', icon: 'income' },
   { to: '/eventuais', label: 'Eventuais', icon: 'event' },

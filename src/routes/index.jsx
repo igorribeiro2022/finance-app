@@ -13,7 +13,6 @@ import VistaBancaria from '../pages/VistaBancaria';
 import Casa from '../pages/Casa';
 import OpenFinance from '../pages/OpenFinance';
 import Perfil from '../pages/Perfil';
-import Categorias from '../pages/Categorias';
 import ConviteCasa from '../pages/ConviteCasa';
 import Login from '../pages/Login';
 import Cadastro from '../pages/Cadastro';
@@ -68,7 +67,7 @@ function AppRoutes() {
 
       <Route element={<PrivateLayout />}>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/categorias" element={<Categorias />} />
+        <Route path="/categorias" element={<Navigate to="/perfil?secao=categorias" replace />} />
         <Route path="/gastos-fixos" element={<GastosFixos />} />
         <Route path="/ganhos-fixos" element={<GanhosFixos />} />
         <Route path="/eventuais" element={<Eventuais />} />

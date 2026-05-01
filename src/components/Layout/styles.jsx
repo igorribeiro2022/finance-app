@@ -8,6 +8,10 @@ export const Wrapper = styled.div`
   background-color: ${({ theme }) => theme.colors.bg};
   position: relative;
   overflow-x: hidden;
+
+  @media (min-width: 769px) {
+    padding-left: ${SIDEBAR_WIDTH};
+  }
 `;
 
 export const Overlay = styled.div`
@@ -33,7 +37,8 @@ export const Sidebar = styled.aside`
   -webkit-backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
   display: flex;
   flex-direction: column;
-  position: sticky;
+  position: fixed;
+  left: 0;
   top: 0;
   height: 100dvh;
   flex-shrink: 0;

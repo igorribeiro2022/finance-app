@@ -15,7 +15,7 @@ import { buildCasaInviteUrl } from '../../utils/casaInvite';
 import {
   PageWrapper, PageHeader, HeaderInfo, PageTitle, PageSubtitle, HeaderActions,
   TabBar, Tab, Card, CardHeader, CardTitle,
-  ChartGrid, ChartHint, ChartPanel,
+  ChartGrid, ChartHint, ChartPanel, PanelStack,
   FullWidthCard,
   InsightHero, InsightIcon, InsightText, InsightTitle, InsightDescription, InsightMeta,
   KpiGrid, KpiCard, KpiLabel, KpiValue, KpiRating, KpiFormula,
@@ -471,13 +471,13 @@ export default function Casa() {
 
   const historicoCasa = useMemo(() => (
     arr(graficos.historico_6_meses).map((item) => {
-      const ganhos = num(item.ganhos_eventuais ?? item.ganhos);
-      const gastos = num(item.gastos_eventuais ?? item.gastos);
+      const ganhos = num(item.ganhos ?? item.ganhos_eventuais);
+      const gastos = num(item.gastos ?? item.gastos_eventuais);
       return {
         mes: item.mes,
         ganhos,
         gastos,
-        saldo: ganhos - gastos,
+        saldo: num(item.saldo ?? (ganhos - gastos)),
       };
     })
   ), [graficos]);
@@ -490,6 +490,7 @@ export default function Casa() {
       saldo: num(item.total_ganhos) - num(item.total_gastos),
     }))
   ), [graficos]);
+  const hasPorMembroChart = porMembroChart.some((item) => item.ganhos > 0 || item.gastos > 0);
 
   const fixosVsEventuaisCasa = useMemo(() => {
     const base = obj(graficos.fixos_vs_eventuais);
@@ -498,6 +499,8 @@ export default function Casa() {
       { name: 'Gastos', Fixos: num(base.gastos_fixos), Eventuais: num(base.gastos_eventuais) },
     ];
   }, [graficos]);
+  const hasFixosVsEventuaisCasa = fixosVsEventuaisCasa.some((item) => item.Fixos > 0 || item.Eventuais > 0);
+  const hasHistoricoCasa = historicoCasa.some((item) => item.ganhos > 0 || item.gastos > 0 || item.saldo !== 0);
 
   const gastosPorCategoriaCasa = useMemo(() => {
     const mapa = {};
@@ -560,7 +563,7 @@ export default function Casa() {
 
   /* ── render: painel ────────────────────────────────────────── */
   const renderPainel = () => (
-    <>
+    <PanelStack>
       {/* Insight */}
       <InsightHero>
         <InsightIcon><Icon name="home" size={30} /></InsightIcon>
@@ -582,7 +585,7 @@ export default function Casa() {
       </InsightHero>
 
       {/* 20 KPIs */}
-      <Card style={{ marginBottom: '1rem' }}>
+      <Card className="casa-kpis" style={{ marginBottom: '1rem' }}>
         <CardHeader>
           <CardTitle>20 KPIs Financeiras</CardTitle>
           {loadingDashboard && <SpinnerIcon />}
@@ -619,7 +622,7 @@ export default function Casa() {
         )}
       </Card>
 
-      <ChartGrid>
+      <ChartGrid className="casa-charts">
         <ChartPanel>
           <CardHeader>
             <div>
@@ -627,7 +630,7 @@ export default function Casa() {
               <ChartHint>Ganhos, gastos e saldo dos ultimos 6 meses</ChartHint>
             </div>
           </CardHeader>
-          {historicoCasa.length > 0 ? (
+          {hasHistoricoCasa ? (
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={historicoCasa} margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
                 <defs>
@@ -693,16 +696,24 @@ export default function Casa() {
               <ChartHint>Recorrencia dos ganhos e gastos</ChartHint>
             </div>
           </CardHeader>
-          <ResponsiveContainer width="100%" height={260}>
-            <BarChart data={fixosVsEventuaisCasa} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
-              <XAxis dataKey="name" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
-              <Tooltip content={<ChartTooltip theme={theme} />} />
-              <Bar dataKey="Fixos" stackId="a" fill={theme.colors.primary} radius={[10, 10, 0, 0]} />
-              <Bar dataKey="Eventuais" stackId="a" fill={theme.colors.accent} radius={[10, 10, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
+          {hasFixosVsEventuaisCasa ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={fixosVsEventuaisCasa} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
+                <XAxis dataKey="name" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                <Tooltip content={<ChartTooltip theme={theme} />} />
+                <Bar dataKey="Fixos" stackId="a" fill={theme.colors.primary} radius={[10, 10, 0, 0]} />
+                <Bar dataKey="Eventuais" stackId="a" fill={theme.colors.accent} radius={[10, 10, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState>
+              <EmptyIcon><Icon name="event" size={36} /></EmptyIcon>
+              <EmptyTitle>Sem recorrencias ainda</EmptyTitle>
+              <EmptyDesc>Ganhos e gastos fixos ou eventuais aparecem aqui quando cadastrados.</EmptyDesc>
+            </EmptyState>
+          )}
         </ChartPanel>
 
         <ChartPanel>
@@ -712,7 +723,7 @@ export default function Casa() {
               <ChartHint>Participacao individual no mes</ChartHint>
             </div>
           </CardHeader>
-          {porMembroChart.length > 0 ? (
+          {hasPorMembroChart ? (
             <ResponsiveContainer width="100%" height={260}>
               <BarChart data={porMembroChart} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
@@ -735,7 +746,7 @@ export default function Casa() {
 
       {/* Agenda */}
       {agenda.length > 0 && (
-        <Card>
+        <Card className="casa-agenda">
           <CardHeader>
             <CardTitle>Próximos vencimentos da Casa</CardTitle>
           </CardHeader>
@@ -750,7 +761,7 @@ export default function Casa() {
           </AgendaList>
         </Card>
       )}
-    </>
+    </PanelStack>
   );
 
   /* ── render: membros ───────────────────────────────────────── */

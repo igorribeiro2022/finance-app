@@ -46,6 +46,70 @@ export const ProfileGrid = styled.div`
   }
 `;
 
+export const ProfileLayout = styled.div`
+  display: grid;
+  grid-template-columns: 230px minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const ProfileNav = styled.nav`
+  ${glassPanelElevated}
+  position: sticky;
+  top: 76px;
+  display: grid;
+  gap: 0.35rem;
+  border-radius: 18px;
+  padding: 0.65rem;
+
+  @media (max-width: 900px) {
+    position: static;
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+`;
+
+export const ProfileNavButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  border: 0;
+  border-radius: 12px;
+  padding: 0.75rem;
+  background: ${({ theme, $active }) => $active ? theme.colors.primaryHighlight : 'transparent'};
+  color: ${({ theme, $active }) => $active ? theme.colors.primary : theme.colors.textMuted};
+  font-size: 0.88rem;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  transition: ${({ theme }) => theme.transition};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceOffset};
+    color: ${({ theme }) => theme.colors.text};
+  }
+
+  @media (max-width: 900px) {
+    width: auto;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+`;
+
+export const ProfileContent = styled.div`
+  min-width: 0;
+`;
+
 export const Card = styled.section`
   ${glassPanel}
   border-radius: 16px;

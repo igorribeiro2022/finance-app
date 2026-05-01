@@ -165,9 +165,9 @@ export default function Dashboard() {
   const ganhosCategoria = arr(graficos.ganhos_por_categoria ?? data?.grafico_ganhos_por_categoria);
   const historico = arr(graficos.historico_6_meses ?? data?.grafico_eventuais_por_mes).map((item) => ({
     mes: item.mes,
-    gastos: num(item.gastos_eventuais ?? item.gastos),
-    ganhos: num(item.ganhos_eventuais ?? item.ganhos),
-    saldo: num(item.ganhos_eventuais ?? item.ganhos) - num(item.gastos_eventuais ?? item.gastos),
+    gastos: num(item.gastos ?? item.gastos_eventuais),
+    ganhos: num(item.ganhos ?? item.ganhos_eventuais),
+    saldo: num(item.saldo ?? (num(item.ganhos ?? item.ganhos_eventuais) - num(item.gastos ?? item.gastos_eventuais))),
   }));
 
   const spendingData = useMemo(() => {
@@ -176,21 +176,26 @@ export default function Dashboard() {
       : [
           { name: 'Fixos', valor: kpis.gastosFixos },
           { name: 'Eventuais', valor: kpis.gastosEventuais },
-          { name: 'Ganhos', valor: kpis.totalGanhos },
         ];
     return dataSource.filter((item) => item.valor > 0);
-  }, [gastosCategoria, kpis.gastosFixos, kpis.gastosEventuais, kpis.totalGanhos]);
+  }, [gastosCategoria, kpis.gastosFixos, kpis.gastosEventuais]);
 
-  const incomeCategoryData = useMemo(() => (
-    ganhosCategoria
-      .map((item) => ({ name: item.categoria, valor: num(item.total ?? item.valor) }))
-      .filter((item) => item.valor > 0)
-  ), [ganhosCategoria]);
+  const incomeCategoryData = useMemo(() => {
+    const dataSource = ganhosCategoria.length > 0
+      ? ganhosCategoria.map((item) => ({ name: item.categoria, valor: num(item.total ?? item.valor) }))
+      : [
+          { name: 'Fixos', valor: kpis.ganhosFixos },
+          { name: 'Eventuais', valor: kpis.ganhosEventuais },
+        ];
+    return dataSource.filter((item) => item.valor > 0);
+  }, [ganhosCategoria, kpis.ganhosFixos, kpis.ganhosEventuais]);
 
   const fixedVsEventualData = useMemo(() => [
     { name: 'Ganhos', Fixos: kpis.ganhosFixos, Eventuais: kpis.ganhosEventuais },
     { name: 'Gastos', Fixos: kpis.gastosFixos, Eventuais: kpis.gastosEventuais },
   ], [kpis.ganhosFixos, kpis.ganhosEventuais, kpis.gastosFixos, kpis.gastosEventuais]);
+  const hasFixedVsEventualData = fixedVsEventualData.some((item) => item.Fixos > 0 || item.Eventuais > 0);
+  const hasHistoricoData = historico.some((item) => item.gastos > 0 || item.ganhos > 0 || item.saldo !== 0);
 
   const kpiCards = [
     { label: 'Ganhos', value: fmt(kpis.totalGanhos), icon: 'income', type: 'income' },
@@ -309,16 +314,20 @@ export default function Dashboard() {
                       <Muted>Separacao por recorrencia</Muted>
                     </div>
                   </ChartHeader>
-                  <ResponsiveContainer width="100%" height={240}>
-                    <BarChart data={fixedVsEventualData} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
-                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
-                      <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
-                      <Tooltip content={<CustomTooltip theme={theme} />} />
-                      <Bar dataKey="Fixos" stackId="a" fill={theme.colors.primary} radius={[10, 10, 0, 0]} />
-                      <Bar dataKey="Eventuais" stackId="a" fill={theme.colors.accent} radius={[10, 10, 0, 0]} />
-                    </BarChart>
-                  </ResponsiveContainer>
+                  {hasFixedVsEventualData ? (
+                    <ResponsiveContainer width="100%" height={240}>
+                      <BarChart data={fixedVsEventualData} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
+                        <XAxis dataKey="name" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip theme={theme} />} />
+                        <Bar dataKey="Fixos" stackId="a" fill={theme.colors.primary} radius={[10, 10, 0, 0]} />
+                        <Bar dataKey="Eventuais" stackId="a" fill={theme.colors.accent} radius={[10, 10, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <EmptyState>Nenhum lancamento registrado ainda.</EmptyState>
+                  )}
                 </ChartCard>
 
                 <ChartCard>
@@ -328,7 +337,7 @@ export default function Dashboard() {
                       <Muted>Tendencia do fluxo liquido</Muted>
                     </div>
                   </ChartHeader>
-                  {historico.length > 0 ? (
+                  {hasHistoricoData ? (
                     <ResponsiveContainer width="100%" height={240}>
                       <AreaChart data={historico} margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
                         <defs>
@@ -365,7 +374,7 @@ export default function Dashboard() {
                   <ChartTitle>Fluxo recente</ChartTitle>
                   <Muted>6 meses</Muted>
                 </ChartHeader>
-                {historico.length > 0 ? (
+                {hasHistoricoData ? (
                   <ResponsiveContainer width="100%" height={190}>
                     <LineChart data={historico} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
                       <XAxis dataKey="mes" hide />
