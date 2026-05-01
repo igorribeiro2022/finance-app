@@ -56,6 +56,17 @@ const normalizeList = (payload) => {
   return [];
 };
 
+const getApiError = (error, fallback) => {
+  const data = error?.response?.data;
+  if (typeof data === 'string') return data;
+  if (data?.detail) return data.detail;
+  if (data && typeof data === 'object') {
+    const first = Object.values(data).flat().find(Boolean);
+    if (first) return String(first);
+  }
+  return fallback;
+};
+
 export default function Perfil() {
   const dispatch = useDispatch();
   const authUser = useSelector((state) => state.auth?.user);
@@ -208,6 +219,11 @@ export default function Perfil() {
     event.target.value = '';
     if (!file) return;
 
+    if (file.size > 2 * 1024 * 1024) {
+      setError('A imagem deve ter no maximo 2MB.');
+      return;
+    }
+
     try {
       setError('');
       const response = await uploadAvatar(file);
@@ -216,7 +232,7 @@ export default function Perfil() {
       setForm((current) => ({ ...current, foto_perfil_url: user.foto_perfil_url || '' }));
       setSuccess('Foto de perfil atualizada.');
     } catch (err) {
-      setError(err?.response?.data?.detail || 'Nao foi possivel enviar a foto.');
+      setError(getApiError(err, 'Nao foi possivel enviar a foto.'));
     }
   };
 

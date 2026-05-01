@@ -1,5 +1,10 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { useTheme } from 'styled-components';
+import {
+  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Pie, PieChart,
+  ResponsiveContainer, Tooltip, XAxis, YAxis,
+} from 'recharts';
 import Icon from '../../components/Icon';
 import {
   getCasa, postCasa, deleteCasa, postCasaSair,
@@ -10,6 +15,7 @@ import { buildCasaInviteUrl } from '../../utils/casaInvite';
 import {
   PageWrapper, PageHeader, HeaderInfo, PageTitle, PageSubtitle, HeaderActions,
   TabBar, Tab, Card, CardHeader, CardTitle,
+  ChartGrid, ChartHint, ChartPanel,
   FullWidthCard,
   InsightHero, InsightIcon, InsightText, InsightTitle, InsightDescription, InsightMeta,
   KpiGrid, KpiCard, KpiLabel, KpiValue, KpiRating, KpiFormula,
@@ -45,6 +51,37 @@ const formatDate = (iso) => {
 
 const avatarInitials = (nome) =>
   (nome || '?').split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+
+const num = (value) => {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : 0;
+};
+
+const arr = (value) => Array.isArray(value) ? value : [];
+
+const obj = (value) => value && typeof value === 'object' && !Array.isArray(value) ? value : {};
+
+function ChartTooltip({ active, payload, label, theme }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div style={{
+      background: theme.colors.glassBgElevated,
+      border: `1px solid ${theme.colors.glassBorder}`,
+      color: theme.colors.text,
+      borderRadius: 14,
+      padding: '10px 12px',
+      fontSize: 12,
+      boxShadow: theme.colors.glassShadow,
+    }}>
+      {label && <p style={{ marginBottom: 4, fontWeight: 800 }}>{label}</p>}
+      {payload.map((item, index) => (
+        <p key={`${item.dataKey || item.name}-${index}`} style={{ color: item.color }}>
+          {item.name}: {formatBRL(item.value)}
+        </p>
+      ))}
+    </div>
+  );
+}
 
 /* ── definição das 20 KPIs ───────────────────────────────────── */
 const KPI_DEFS = [
@@ -145,6 +182,7 @@ const TABS = [
 export default function Casa() {
   const auth     = useSelector((s) => s.auth);
   const userId   = auth?.user?.id;
+  const theme = useTheme();
   const userName = auth?.user?.nome?.split(' ')[0] ?? 'você';
 
   /* estado global */
@@ -423,12 +461,65 @@ export default function Casa() {
   );
 
   const kpis     = useMemo(() => dashboard?.kpis ?? {}, [dashboard]);
+  const graficos = useMemo(() => obj(dashboard?.graficos), [dashboard]);
   const agenda   = useMemo(() => {
     const list = dashboard?.agenda ?? {};
     return Object.entries(list).flatMap(([data, itens]) =>
       (Array.isArray(itens) ? itens : [itens]).map((i) => ({ ...i, data }))
     ).slice(0, 8);
   }, [dashboard]);
+
+  const historicoCasa = useMemo(() => (
+    arr(graficos.historico_6_meses).map((item) => {
+      const ganhos = num(item.ganhos_eventuais ?? item.ganhos);
+      const gastos = num(item.gastos_eventuais ?? item.gastos);
+      return {
+        mes: item.mes,
+        ganhos,
+        gastos,
+        saldo: ganhos - gastos,
+      };
+    })
+  ), [graficos]);
+
+  const porMembroChart = useMemo(() => (
+    arr(graficos.por_membro).map((item) => ({
+      nome: item.usuario || item.nome || 'Membro',
+      ganhos: num(item.total_ganhos),
+      gastos: num(item.total_gastos),
+      saldo: num(item.total_ganhos) - num(item.total_gastos),
+    }))
+  ), [graficos]);
+
+  const fixosVsEventuaisCasa = useMemo(() => {
+    const base = obj(graficos.fixos_vs_eventuais);
+    return [
+      { name: 'Ganhos', Fixos: num(base.ganhos_fixos), Eventuais: num(base.ganhos_eventuais) },
+      { name: 'Gastos', Fixos: num(base.gastos_fixos), Eventuais: num(base.gastos_eventuais) },
+    ];
+  }, [graficos]);
+
+  const gastosPorCategoriaCasa = useMemo(() => {
+    const mapa = {};
+    arr(lancamentosCasa?.lancamentos).forEach((item) => {
+      if (item.tipo !== 'gasto') return;
+      const categoria = item.categoria || 'Sem categoria';
+      mapa[categoria] = (mapa[categoria] || 0) + num(item.valor);
+    });
+    return Object.entries(mapa)
+      .map(([name, valor]) => ({ name, valor }))
+      .sort((a, b) => b.valor - a.valor)
+      .slice(0, 8);
+  }, [lancamentosCasa]);
+
+  const chartColors = [
+    theme.colors.primary,
+    theme.colors.accent,
+    theme.colors.success,
+    theme.colors.warning,
+    theme.colors.error,
+    theme.colors.neutral,
+  ];
 
   const totalMembros = membros.length;
   const periodoLabel = useMemo(() => {
@@ -527,6 +618,120 @@ export default function Casa() {
           </KpiGrid>
         )}
       </Card>
+
+      <ChartGrid>
+        <ChartPanel>
+          <CardHeader>
+            <div>
+              <CardTitle>Fluxo da Casa</CardTitle>
+              <ChartHint>Ganhos, gastos e saldo dos ultimos 6 meses</ChartHint>
+            </div>
+          </CardHeader>
+          {historicoCasa.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={historicoCasa} margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="casaSaldoGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor={theme.colors.primary} stopOpacity={0.36} />
+                    <stop offset="95%" stopColor={theme.colors.primary} stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                <Tooltip content={<ChartTooltip theme={theme} />} />
+                <Area type="monotone" dataKey="saldo" name="Saldo" stroke={theme.colors.primary} strokeWidth={3} fill="url(#casaSaldoGradient)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState>
+              <EmptyIcon><Icon name="chart" size={36} /></EmptyIcon>
+              <EmptyTitle>Sem historico suficiente</EmptyTitle>
+              <EmptyDesc>O fluxo da Casa aparece conforme os membros registram lancamentos.</EmptyDesc>
+            </EmptyState>
+          )}
+        </ChartPanel>
+
+        <ChartPanel>
+          <CardHeader>
+            <div>
+              <CardTitle>Gastos por categoria</CardTitle>
+              <ChartHint>Concentracao do mes selecionado</ChartHint>
+            </div>
+          </CardHeader>
+          {gastosPorCategoriaCasa.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Tooltip content={<ChartTooltip theme={theme} />} />
+                <Pie
+                  data={gastosPorCategoriaCasa}
+                  dataKey="valor"
+                  nameKey="name"
+                  innerRadius={58}
+                  outerRadius={90}
+                  paddingAngle={4}
+                >
+                  {gastosPorCategoriaCasa.map((_, i) => (
+                    <Cell key={i} fill={chartColors[i % chartColors.length]} />
+                  ))}
+                </Pie>
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState>
+              <EmptyIcon><Icon name="categories" size={36} /></EmptyIcon>
+              <EmptyTitle>Sem gastos categorizados</EmptyTitle>
+              <EmptyDesc>As categorias aparecem quando houver gastos no periodo.</EmptyDesc>
+            </EmptyState>
+          )}
+        </ChartPanel>
+
+        <ChartPanel>
+          <CardHeader>
+            <div>
+              <CardTitle>Fixos x eventuais</CardTitle>
+              <ChartHint>Recorrencia dos ganhos e gastos</ChartHint>
+            </div>
+          </CardHeader>
+          <ResponsiveContainer width="100%" height={260}>
+            <BarChart data={fixosVsEventuaisCasa} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
+              <XAxis dataKey="name" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
+              <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+              <Tooltip content={<ChartTooltip theme={theme} />} />
+              <Bar dataKey="Fixos" stackId="a" fill={theme.colors.primary} radius={[10, 10, 0, 0]} />
+              <Bar dataKey="Eventuais" stackId="a" fill={theme.colors.accent} radius={[10, 10, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartPanel>
+
+        <ChartPanel>
+          <CardHeader>
+            <div>
+              <CardTitle>Por membro</CardTitle>
+              <ChartHint>Participacao individual no mes</ChartHint>
+            </div>
+          </CardHeader>
+          {porMembroChart.length > 0 ? (
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={porMembroChart} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
+                <XAxis dataKey="nome" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                <Tooltip content={<ChartTooltip theme={theme} />} />
+                <Bar dataKey="ganhos" name="Ganhos" fill={theme.colors.success} radius={[10, 10, 0, 0]} />
+                <Bar dataKey="gastos" name="Gastos" fill={theme.colors.error} radius={[10, 10, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState>
+              <EmptyIcon><Icon name="people" size={36} /></EmptyIcon>
+              <EmptyTitle>Sem comparativo ainda</EmptyTitle>
+              <EmptyDesc>Convide membros e registre lancamentos para comparar a Casa.</EmptyDesc>
+            </EmptyState>
+          )}
+        </ChartPanel>
+      </ChartGrid>
 
       {/* Agenda */}
       {agenda.length > 0 && (

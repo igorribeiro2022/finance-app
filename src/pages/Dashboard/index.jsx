@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useSelector } from 'react-redux';
 import { useTheme } from 'styled-components';
 import {
-  Bar, BarChart, CartesianGrid, Cell, Line, LineChart,
+  Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart,
   ResponsiveContainer, Tooltip, XAxis, YAxis,
 } from 'recharts';
 
@@ -21,6 +21,7 @@ import {
   BalanceLabel,
   BalanceValue,
   ChartCard,
+  ChartGrid,
   ChartHeader,
   ChartTitle,
   DashboardGrid,
@@ -107,8 +108,8 @@ function CustomTooltip({ active, payload, label, theme }) {
       boxShadow: theme.colors.glassShadow,
     }}>
       {label && <p style={{ marginBottom: 4, fontWeight: 800 }}>{label}</p>}
-      {payload.map((p) => (
-        <p key={p.dataKey} style={{ color: p.color }}>
+      {payload.map((p, index) => (
+        <p key={`${p.dataKey || p.name}-${index}`} style={{ color: p.color }}>
           {p.name}: {fmt(p.value)}
         </p>
       ))}
@@ -161,10 +162,12 @@ export default function Dashboard() {
   const graficos = obj(data?.graficos);
   const agendaItems = arr(data?.agenda ?? data?.agenda_items).slice(0, 5);
   const gastosCategoria = arr(graficos.gastos_por_categoria ?? data?.grafico_gastos_por_categoria);
+  const ganhosCategoria = arr(graficos.ganhos_por_categoria ?? data?.grafico_ganhos_por_categoria);
   const historico = arr(graficos.historico_6_meses ?? data?.grafico_eventuais_por_mes).map((item) => ({
     mes: item.mes,
     gastos: num(item.gastos_eventuais ?? item.gastos),
     ganhos: num(item.ganhos_eventuais ?? item.ganhos),
+    saldo: num(item.ganhos_eventuais ?? item.ganhos) - num(item.gastos_eventuais ?? item.gastos),
   }));
 
   const spendingData = useMemo(() => {
@@ -178,6 +181,17 @@ export default function Dashboard() {
     return dataSource.filter((item) => item.valor > 0);
   }, [gastosCategoria, kpis.gastosFixos, kpis.gastosEventuais, kpis.totalGanhos]);
 
+  const incomeCategoryData = useMemo(() => (
+    ganhosCategoria
+      .map((item) => ({ name: item.categoria, valor: num(item.total ?? item.valor) }))
+      .filter((item) => item.valor > 0)
+  ), [ganhosCategoria]);
+
+  const fixedVsEventualData = useMemo(() => [
+    { name: 'Ganhos', Fixos: kpis.ganhosFixos, Eventuais: kpis.ganhosEventuais },
+    { name: 'Gastos', Fixos: kpis.gastosFixos, Eventuais: kpis.gastosEventuais },
+  ], [kpis.ganhosFixos, kpis.ganhosEventuais, kpis.gastosFixos, kpis.gastosEventuais]);
+
   const kpiCards = [
     { label: 'Ganhos', value: fmt(kpis.totalGanhos), icon: 'income', type: 'income' },
     { label: 'Gastos', value: fmt(kpis.totalGastos), icon: 'expense', type: 'expense' },
@@ -186,6 +200,15 @@ export default function Dashboard() {
   ];
 
   if (loading) return <Skeleton />;
+
+  const chartColors = [
+    theme.colors.primary,
+    theme.colors.accent,
+    theme.colors.success,
+    theme.colors.warning,
+    theme.colors.error,
+    theme.colors.neutral,
+  ];
 
   return (
     <DashboardShell>
@@ -247,6 +270,85 @@ export default function Dashboard() {
                   <EmptyState>Nenhum gasto registrado ainda.</EmptyState>
                 )}
               </ChartCard>
+
+              <ChartGrid>
+                <ChartCard>
+                  <ChartHeader>
+                    <div>
+                      <ChartTitle>Ganhos por categoria</ChartTitle>
+                      <Muted>De onde o dinheiro entrou</Muted>
+                    </div>
+                  </ChartHeader>
+                  {incomeCategoryData.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={240}>
+                      <PieChart>
+                        <Tooltip content={<CustomTooltip theme={theme} />} />
+                        <Pie
+                          data={incomeCategoryData}
+                          dataKey="valor"
+                          nameKey="name"
+                          innerRadius={52}
+                          outerRadius={86}
+                          paddingAngle={4}
+                        >
+                          {incomeCategoryData.map((_, i) => (
+                            <Cell key={i} fill={chartColors[i % chartColors.length]} />
+                          ))}
+                        </Pie>
+                      </PieChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <EmptyState>Nenhum ganho categorizado ainda.</EmptyState>
+                  )}
+                </ChartCard>
+
+                <ChartCard>
+                  <ChartHeader>
+                    <div>
+                      <ChartTitle>Fixos x eventuais</ChartTitle>
+                      <Muted>Separacao por recorrencia</Muted>
+                    </div>
+                  </ChartHeader>
+                  <ResponsiveContainer width="100%" height={240}>
+                    <BarChart data={fixedVsEventualData} margin={{ top: 16, right: 8, left: 0, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
+                      <XAxis dataKey="name" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
+                      <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                      <Tooltip content={<CustomTooltip theme={theme} />} />
+                      <Bar dataKey="Fixos" stackId="a" fill={theme.colors.primary} radius={[10, 10, 0, 0]} />
+                      <Bar dataKey="Eventuais" stackId="a" fill={theme.colors.accent} radius={[10, 10, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </ChartCard>
+
+                <ChartCard>
+                  <ChartHeader>
+                    <div>
+                      <ChartTitle>Saldo mensal</ChartTitle>
+                      <Muted>Tendencia do fluxo liquido</Muted>
+                    </div>
+                  </ChartHeader>
+                  {historico.length > 0 ? (
+                    <ResponsiveContainer width="100%" height={240}>
+                      <AreaChart data={historico} margin={{ top: 12, right: 8, left: 0, bottom: 0 }}>
+                        <defs>
+                          <linearGradient id="saldoGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor={theme.colors.primary} stopOpacity={0.36} />
+                            <stop offset="95%" stopColor={theme.colors.primary} stopOpacity={0.02} />
+                          </linearGradient>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke={theme.colors.divider} vertical={false} />
+                        <XAxis dataKey="mes" tick={{ fontSize: 11, fill: theme.colors.textMuted }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 11, fill: theme.colors.textMuted }} tickFormatter={(v) => `R$${(v / 1000).toFixed(0)}k`} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip theme={theme} />} />
+                        <Area type="monotone" dataKey="saldo" name="Saldo" stroke={theme.colors.primary} strokeWidth={3} fill="url(#saldoGradient)" />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  ) : (
+                    <EmptyState>Sem historico suficiente.</EmptyState>
+                  )}
+                </ChartCard>
+              </ChartGrid>
             </MainColumn>
 
             <SideColumn>

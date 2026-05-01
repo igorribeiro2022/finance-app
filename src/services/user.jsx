@@ -6,8 +6,6 @@ export const uploadAvatar = (file) => {
   const formData = new FormData();
   formData.append('foto', file);
 
-  return api.post('/auth/avatar/', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
+  return api.post('/auth/avatar/', formData);
 };
 export const deleteAvatar = () => api.delete('/auth/avatar/');

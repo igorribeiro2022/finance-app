@@ -125,6 +125,30 @@ export const FullWidthCard = styled.div`
   margin-bottom: 1rem;
 `;
 
+export const ChartGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+  min-width: 0;
+`;
+
+export const ChartPanel = styled.div`
+  ${glassPanel}
+  border-radius: 18px;
+  padding: 1rem;
+  min-width: 0;
+`;
+
+export const ChartHint = styled.div`
+  margin-top: 0.2rem;
+  color: ${({ theme }) => theme.textMuted};
+  font-size: 0.75rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+`;
+
 /* ── KPIs ───────────────────────────────────────────────────── */
 export const KpiGrid = styled.div`
   display: grid;

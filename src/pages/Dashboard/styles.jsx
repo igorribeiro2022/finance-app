@@ -171,6 +171,17 @@ export const ChartCard = styled.div`
   min-width: 0;
 `;
 
+export const ChartGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  min-width: 0;
+
+  ${ChartCard}:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+`;
+
 export const ChartHeader = styled.div`
   display: flex;
   justify-content: space-between;
