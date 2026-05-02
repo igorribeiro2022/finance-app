@@ -28,7 +28,7 @@ api.interceptors.request.use(
 
     config.headers = config.headers || {};
 
-    if (token) {
+    if (token && !config.headers.Authorization && !config.headers.authorization) {
       config.headers.Authorization = `Bearer ${token}`;
     }
 
@@ -65,7 +65,11 @@ api.interceptors.response.use(
     const isAuthRoute =
       url.includes('/auth/login') ||
       url.includes('/auth/refresh') ||
-      url.includes('/auth/register');
+      url.includes('/auth/register') ||
+      url.includes('/auth/forgot-password') ||
+      url.includes('/auth/reset-password') ||
+      url.includes('/auth/google') ||
+      url.includes('/auth/apple');
 
     if (error.response.status !== 401 || originalRequest._retry || isAuthRoute) {
       return Promise.reject(error);

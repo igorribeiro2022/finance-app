@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 
 import Icon from '../Icon';
@@ -19,10 +19,19 @@ import {
   Topbar,
   TopbarLeft,
   TopbarRight,
+  AccountMenu,
+  AccountDropdown,
+  AccountMenuDivider,
+  AccountMenuHeader,
+  AccountMenuHint,
+  AccountMenuItem,
+  AccountMenuTitle,
+  AccountLogoutButton,
   UserMenu,
   UserAvatar,
   UserPhoto,
   UserName,
+  UserMenuChevron,
   PageContent,
   Overlay,
   LogoutButton,
@@ -40,9 +49,19 @@ const navItems = [
   { to: '/open-finance', label: 'Open Finance', icon: 'openFinance' },
 ];
 
+const accountItems = [
+  { to: '/perfil', label: 'Perfil', icon: 'user' },
+  { to: '/perfil?secao=preferencias', label: 'Preferencias', icon: 'settings' },
+  { to: '/seguranca', label: 'Seguranca', icon: 'shield' },
+  { to: '/membros-casa', label: 'Membros da casa', icon: 'people' },
+];
+
 export default function Layout({ children }) {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+  const accountMenuRef = useRef(null);
+  const [accountMenuOpen, setAccountMenuOpen] = useState(false);
 
   const ui = useSelector((state) => state.ui || {});
   const auth = useSelector((state) => state.auth || {});
@@ -50,6 +69,31 @@ export default function Layout({ children }) {
   const sidebarOpen = !!ui.sidebarOpen;
   const user = auth.user || null;
   const refreshToken = auth.refreshToken || '';
+  const profileSection = new URLSearchParams(location.search).get('secao');
+
+  useEffect(() => {
+    if (!accountMenuOpen) return undefined;
+
+    const handleOutsideClick = (event) => {
+      if (!accountMenuRef.current?.contains(event.target)) {
+        setAccountMenuOpen(false);
+      }
+    };
+
+    const handleEscape = (event) => {
+      if (event.key === 'Escape') {
+        setAccountMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    document.addEventListener('keydown', handleEscape);
+
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('keydown', handleEscape);
+    };
+  }, [accountMenuOpen]);
 
   const closeSidebar = () => {
     if (sidebarOpen) {
@@ -58,6 +102,7 @@ export default function Layout({ children }) {
   };
 
   const handleLogout = async () => {
+    setAccountMenuOpen(false);
     try {
       if (refreshToken) {
         await api.post('/auth/logout/', { refresh: refreshToken });
@@ -68,6 +113,18 @@ export default function Layout({ children }) {
       dispatch(logout());
       navigate('/login', { replace: true });
     }
+  };
+
+  const getAccountItemClassName = (item, isActive) => {
+    if (item.to === '/perfil') {
+      return location.pathname === '/perfil' && !profileSection ? 'active' : '';
+    }
+
+    if (item.to.startsWith('/perfil?secao=preferencias')) {
+      return location.pathname === '/perfil' && profileSection === 'preferencias' ? 'active' : '';
+    }
+
+    return isActive ? 'active' : '';
   };
 
   return (
@@ -130,16 +187,58 @@ export default function Layout({ children }) {
           </TopbarLeft>
 
           <TopbarRight>
-            <UserMenu as={NavLink} to="/perfil">
-              <UserAvatar>
-                {user?.foto_perfil_url ? (
-                  <UserPhoto src={user.foto_perfil_url} alt="" />
-                ) : (
-                  <Icon name="user" size={18} />
-                )}
-              </UserAvatar>
-              <UserName>{user?.nome?.split(' ')[0] ?? 'Usuario'}</UserName>
-            </UserMenu>
+            <AccountMenu ref={accountMenuRef}>
+              <UserMenu
+                as="button"
+                type="button"
+                onClick={() => setAccountMenuOpen((value) => !value)}
+                aria-haspopup="menu"
+                aria-expanded={accountMenuOpen}
+              >
+                <UserAvatar>
+                  {user?.foto_perfil_url ? (
+                    <UserPhoto src={user.foto_perfil_url} alt="" />
+                  ) : (
+                    <Icon name="user" size={18} />
+                  )}
+                </UserAvatar>
+                <UserName>{user?.nome?.split(' ')[0] ?? 'Usuario'}</UserName>
+                <UserMenuChevron $open={accountMenuOpen}>
+                  <Icon name="chevronDown" size={15} />
+                </UserMenuChevron>
+              </UserMenu>
+
+              {accountMenuOpen && (
+                <AccountDropdown role="menu">
+                  <AccountMenuHeader>
+                    <AccountMenuTitle>Minha conta</AccountMenuTitle>
+                    <AccountMenuHint>{user?.email || 'Gerencie sua conta Finance'}</AccountMenuHint>
+                  </AccountMenuHeader>
+
+                  <AccountMenuDivider />
+
+                  {accountItems.map((item) => (
+                    <AccountMenuItem
+                      key={item.to}
+                      to={item.to}
+                      role="menuitem"
+                      className={({ isActive }) => getAccountItemClassName(item, isActive)}
+                      onClick={() => setAccountMenuOpen(false)}
+                    >
+                      <span className="icon"><Icon name={item.icon} size={18} /></span>
+                      <span>{item.label}</span>
+                    </AccountMenuItem>
+                  ))}
+
+                  <AccountMenuDivider />
+
+                  <AccountLogoutButton type="button" onClick={handleLogout} role="menuitem">
+                    <span className="icon"><Icon name="logout" size={18} /></span>
+                    <span>Sair</span>
+                  </AccountLogoutButton>
+                </AccountDropdown>
+              )}
+            </AccountMenu>
           </TopbarRight>
         </Topbar>
 

@@ -6,29 +6,43 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { setCredentials } from '../../store/authSlice';
-import api from '../../services/api';
+import { getOAuthLoginUrl, registerWithEmail } from '../../services/auth';
 import { postAceitarConviteComAccess } from '../../services/casa';
 import {
   clearCasaInviteToken,
   getCasaInviteToken,
   saveCasaInviteToken,
 } from '../../utils/casaInvite';
+import { Divider, SocialButton } from '../Login/styles';
 import {
-  Container, LeftPanel, RightPanel,
-  BrandMark, Logo, Title, Subtitle,
-  Form, FormGroup, Label, Input,
-  ErrorMessage, SubmitButton, FooterText,
-  Spinner, SuccessMessage, PasswordWrapper, TogglePassword,
+  BrandMark,
+  Container,
+  ErrorMessage,
+  FooterText,
+  Form,
+  FormGroup,
+  Input,
+  Label,
+  LeftPanel,
+  Logo,
+  PasswordWrapper,
+  RightPanel,
+  Spinner,
+  SubmitButton,
+  Subtitle,
+  SuccessMessage,
+  Title,
+  TogglePassword,
 } from './styles';
 
 const schema = yup.object({
-  nome: yup.string().min(2, 'Nome muito curto').required('Nome obrigatório'),
-  email: yup.string().email('E-mail inválido').required('E-mail obrigatório'),
-  password: yup.string().min(8, 'Mínimo 8 caracteres').required('Senha obrigatória'),
+  nome: yup.string().min(2, 'Nome muito curto').required('Nome obrigatorio'),
+  email: yup.string().email('E-mail invalido').required('E-mail obrigatorio'),
+  password: yup.string().min(8, 'Minimo 8 caracteres').required('Senha obrigatoria'),
   password2: yup
     .string()
-    .oneOf([yup.ref('password')], 'As senhas não coincidem')
-    .required('Confirmação obrigatória'),
+    .oneOf([yup.ref('password')], 'As senhas nao coincidem')
+    .required('Confirmacao obrigatoria'),
 });
 
 export default function Cadastro() {
@@ -52,36 +66,37 @@ export default function Cadastro() {
     formState: { errors, isSubmitting },
   } = useForm({ resolver: yupResolver(schema) });
 
+  const startOAuth = (provider) => {
+    window.location.href = getOAuthLoginUrl(provider);
+  };
+
   const onSubmit = async (data) => {
     setApiError('');
     try {
-      await api.post('/auth/register/', data);
-      if (conviteToken) {
-        const loginResponse = await api.post('/auth/login/', {
-          email: data.email,
-          password: data.password,
-        });
+      const registerResponse = await registerWithEmail(data);
 
+      if (conviteToken) {
         try {
-          await postAceitarConviteComAccess(conviteToken, loginResponse.data.access);
+          await postAceitarConviteComAccess(conviteToken, registerResponse.data.access);
         } catch (inviteErr) {
-          const msg = inviteErr.response?.data?.detail || 'Convite inválido ou expirado.';
-          setApiError(`Conta criada, mas não foi possível aceitar o convite: ${msg}`);
+          const msg = inviteErr.response?.data?.detail || 'Convite invalido ou expirado.';
+          setApiError(`Conta criada, mas nao foi possivel aceitar o convite: ${msg}`);
           setTimeout(() => navigate(`/login?convite=${encodeURIComponent(conviteToken)}`), 3000);
           return;
         }
 
         clearCasaInviteToken();
-        dispatch(setCredentials(loginResponse.data));
+        dispatch(setCredentials(registerResponse.data));
         setSuccessMessage('Conta criada e convite aceito! Redirecionando para sua Casa...');
         setSuccess(true);
         setTimeout(() => navigate('/casa'), 1000);
         return;
       }
 
-      setSuccessMessage('Conta criada com sucesso! Redirecionando para o login...');
+      dispatch(setCredentials(registerResponse.data));
+      setSuccessMessage('Conta criada com sucesso! Preparando seu onboarding...');
       setSuccess(true);
-      setTimeout(() => navigate('/login'), 2000);
+      setTimeout(() => navigate('/onboarding'), 1000);
     } catch (err) {
       const msg = err.response?.data?.email?.[0]
         || err.response?.data?.email_convidado?.[0]
@@ -90,21 +105,6 @@ export default function Cadastro() {
       setApiError(msg);
     }
   };
-
-  const EyeIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-      <circle cx="12" cy="12" r="3"/>
-    </svg>
-  );
-
-  const EyeOffIcon = () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-      <line x1="1" y1="1" x2="23" y2="23"/>
-    </svg>
-  );
 
   return (
     <Container>
@@ -124,8 +124,8 @@ export default function Cadastro() {
         </BrandMark>
 
         <div>
-          <Title>Criar conta</Title>
-          <Subtitle>Comece agora a organizar suas finanças de forma inteligente.</Subtitle>
+          <Title>Criar conta com e-mail</Title>
+          <Subtitle>Comece agora a organizar suas financas de forma inteligente.</Subtitle>
         </div>
 
         {success ? (
@@ -137,80 +137,96 @@ export default function Cadastro() {
             {successMessage}
           </SuccessMessage>
         ) : (
-          <Form onSubmit={handleSubmit(onSubmit)}>
-            <FormGroup>
-              <Label>Nome completo</Label>
-              <Input
-                type="text"
-                placeholder="Seu nome"
-                $hasError={!!errors.nome}
-                {...register('nome')}
-              />
-              {errors.nome && <ErrorMessage>{errors.nome.message}</ErrorMessage>}
-            </FormGroup>
+          <>
+            <div style={{ display: 'grid', gap: '0.75rem' }}>
+              <SocialButton type="button" onClick={() => startOAuth('google')}>
+                Continuar com Google
+              </SocialButton>
+              <SocialButton type="button" onClick={() => startOAuth('apple')}>
+                Continuar com Apple
+              </SocialButton>
+              <Divider>ou cadastre com e-mail</Divider>
+            </div>
 
-            <FormGroup>
-              <Label>E-mail</Label>
-              <Input
-                type="email"
-                placeholder="seu@email.com"
-                $hasError={!!errors.email}
-                {...register('email')}
-              />
-              {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
-            </FormGroup>
-
-            <FormGroup>
-              <Label>Senha</Label>
-              <PasswordWrapper>
+            <Form onSubmit={handleSubmit(onSubmit)}>
+              <FormGroup>
+                <Label>Nome completo</Label>
                 <Input
-                  type={showPassword ? 'text' : 'password'}
-                  placeholder="Mínimo 8 caracteres"
-                  $hasError={!!errors.password}
-                  {...register('password')}
+                  type="text"
+                  placeholder="Seu nome"
+                  autoComplete="name"
+                  $hasError={!!errors.nome}
+                  {...register('nome')}
                 />
-                <TogglePassword
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                </TogglePassword>
-              </PasswordWrapper>
-              {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
-            </FormGroup>
+                {errors.nome && <ErrorMessage>{errors.nome.message}</ErrorMessage>}
+              </FormGroup>
 
-            <FormGroup>
-              <Label>Confirmar senha</Label>
-              <PasswordWrapper>
+              <FormGroup>
+                <Label>E-mail</Label>
                 <Input
-                  type={showPassword2 ? 'text' : 'password'}
-                  placeholder="••••••••"
-                  $hasError={!!errors.password2}
-                  {...register('password2')}
+                  type="email"
+                  placeholder="seu@email.com"
+                  autoComplete="email"
+                  $hasError={!!errors.email}
+                  {...register('email')}
                 />
-                <TogglePassword
-                  type="button"
-                  onClick={() => setShowPassword2((v) => !v)}
-                  aria-label={showPassword2 ? 'Ocultar senha' : 'Mostrar senha'}
-                >
-                  {showPassword2 ? <EyeOffIcon /> : <EyeIcon />}
-                </TogglePassword>
-              </PasswordWrapper>
-              {errors.password2 && <ErrorMessage>{errors.password2.message}</ErrorMessage>}
-            </FormGroup>
+                {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
+              </FormGroup>
 
-            {apiError && <ErrorMessage $center>{apiError}</ErrorMessage>}
+              <FormGroup>
+                <Label>Senha</Label>
+                <PasswordWrapper>
+                  <Input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Minimo 8 caracteres"
+                    autoComplete="new-password"
+                    $hasError={!!errors.password}
+                    {...register('password')}
+                  />
+                  <TogglePassword
+                    type="button"
+                    onClick={() => setShowPassword((value) => !value)}
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword ? 'Ocultar' : 'Mostrar'}
+                  </TogglePassword>
+                </PasswordWrapper>
+                {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
+              </FormGroup>
 
-            <SubmitButton type="submit" disabled={isSubmitting}>
-              {isSubmitting ? <Spinner /> : 'Criar conta'}
-            </SubmitButton>
-          </Form>
+              <FormGroup>
+                <Label>Confirmar senha</Label>
+                <PasswordWrapper>
+                  <Input
+                    type={showPassword2 ? 'text' : 'password'}
+                    placeholder="Repita sua senha"
+                    autoComplete="new-password"
+                    $hasError={!!errors.password2}
+                    {...register('password2')}
+                  />
+                  <TogglePassword
+                    type="button"
+                    onClick={() => setShowPassword2((value) => !value)}
+                    aria-label={showPassword2 ? 'Ocultar senha' : 'Mostrar senha'}
+                  >
+                    {showPassword2 ? 'Ocultar' : 'Mostrar'}
+                  </TogglePassword>
+                </PasswordWrapper>
+                {errors.password2 && <ErrorMessage>{errors.password2.message}</ErrorMessage>}
+              </FormGroup>
+
+              {apiError && <ErrorMessage $center>{apiError}</ErrorMessage>}
+
+              <SubmitButton type="submit" disabled={isSubmitting}>
+                {isSubmitting ? <Spinner /> : 'Criar conta'}
+              </SubmitButton>
+            </Form>
+          </>
         )}
 
         <FooterText>
-          Já tem uma conta?{' '}
-          <Link to={conviteToken ? `/login?convite=${encodeURIComponent(conviteToken)}` : '/login'}>
+          Ja tem uma conta?{' '}
+          <Link to={conviteToken ? `/login?modo=email&convite=${encodeURIComponent(conviteToken)}` : '/login?modo=email'}>
             Entrar
           </Link>
         </FooterText>
@@ -230,7 +246,7 @@ export default function Cadastro() {
             <path d="M42 65 L78 65" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
           </svg>
           <Title $inverse>Finance</Title>
-          <Subtitle $inverse>Controle financeiro pessoal e familiar com inteligência.</Subtitle>
+          <Subtitle $inverse>Controle financeiro pessoal e familiar com inteligencia.</Subtitle>
         </Logo>
       </RightPanel>
     </Container>

@@ -605,6 +605,216 @@ export const MovementValue = styled.div`
   white-space: nowrap;
 `;
 
+export const CasaCalendarLayout = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.65fr);
+  gap: 1rem;
+  align-items: start;
+
+  @media (max-width: 980px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+export const CasaCalendarCard = styled(Card)`
+  min-width: 0;
+`;
+
+export const CasaChecklistCard = styled(Card)`
+  min-width: 0;
+`;
+
+export const CasaCalendarGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: ${({ $header }) => $header ? '0.25rem' : '0.35rem'};
+  margin-bottom: ${({ $header }) => $header ? '0.35rem' : '0'};
+`;
+
+export const CasaCalendarWeekday = styled.div`
+  color: ${({ theme }) => theme.textMuted};
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-align: center;
+  text-transform: uppercase;
+`;
+
+export const CasaCalendarDay = styled.button`
+  min-height: 92px;
+  padding: 0.45rem;
+  border-radius: 10px;
+  border: 1px solid ${({ theme, $selected, $today }) =>
+    $selected ? theme.colors.primary : $today ? `${theme.colors.primary}70` : theme.border};
+  background: ${({ theme, $selected, $hasEvents }) =>
+    $selected ? theme.colors.primaryHighlight : $hasEvents ? theme.colors.surfaceOffset : theme.colors.surface};
+  color: ${({ theme }) => theme.text};
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+
+  &:hover {
+    border-color: ${({ theme }) => theme.colors.primary};
+    transform: translateY(-1px);
+  }
+
+  @media (max-width: 640px) {
+    min-height: 64px;
+    padding: 0.3rem;
+  }
+`;
+
+export const CasaCalendarDayNumber = styled.span`
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.78rem;
+  font-weight: ${({ $today }) => $today ? 800 : 700};
+  color: ${({ theme, $today }) => $today ? theme.colors.primary : theme.text};
+  background: ${({ theme, $today }) => $today ? theme.colors.primaryHighlight : 'transparent'};
+`;
+
+export const CasaCalendarEvent = styled.span`
+  width: 100%;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  border-radius: 5px;
+  padding: 0.14rem 0.35rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  background: ${({ theme, type }) => type === 'ganho' ? `${theme.colors.success}22` : type === 'gasto' ? `${theme.colors.error}22` : theme.colors.surfaceOffset};
+  color: ${({ theme, type }) => type === 'ganho' ? theme.colors.success : type === 'gasto' ? theme.colors.error : theme.textMuted};
+
+  @media (max-width: 640px) {
+    display: none;
+  }
+`;
+
+export const CasaDayDetails = styled.div`
+  ${glassPanelElevated}
+  border-radius: 12px;
+  margin-top: 1rem;
+  padding: 1rem;
+`;
+
+export const ChecklistSummary = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+
+  span {
+    ${glassPanelElevated}
+    border-radius: 10px;
+    color: ${({ theme }) => theme.textMuted};
+    font-size: 0.75rem;
+    padding: 0.7rem;
+  }
+
+  strong {
+    color: ${({ theme }) => theme.text};
+    display: block;
+    font-size: 1.2rem;
+    font-variant-numeric: tabular-nums;
+  }
+`;
+
+export const ChecklistList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+`;
+
+export const ChecklistItem = styled.label`
+  ${glassPanelElevated}
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.65rem;
+  border-radius: 10px;
+  padding: 0.7rem;
+  opacity: ${({ $checked }) => $checked ? 0.72 : 1};
+
+  @media (max-width: 620px) {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+`;
+
+export const ChecklistCheck = styled.span`
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: ${({ theme }) => theme.colors.success};
+    cursor: pointer;
+  }
+`;
+
+export const ChecklistInfo = styled.span`
+  min-width: 0;
+`;
+
+export const ChecklistTitle = styled.span`
+  display: block;
+  color: ${({ theme }) => theme.text};
+  font-size: 0.86rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const ChecklistMeta = styled.span`
+  display: block;
+  color: ${({ theme }) => theme.textMuted};
+  font-size: 0.72rem;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const ChecklistValue = styled.span`
+  color: ${({ theme }) => theme.colors.error};
+  font-size: 0.86rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  @media (max-width: 620px) {
+    grid-column: 2;
+  }
+`;
+
+export const ChecklistStatus = styled.span`
+  border-radius: 999px;
+  font-size: 0.67rem;
+  font-weight: 800;
+  padding: 0.18rem 0.5rem;
+  background: ${({ theme, $checked }) => $checked ? `${theme.colors.success}18` : `${theme.colors.warning}18`};
+  color: ${({ theme, $checked }) => $checked ? theme.colors.success : theme.colors.warning};
+  white-space: nowrap;
+
+  @media (max-width: 620px) {
+    grid-column: 2;
+    width: fit-content;
+  }
+`;
+
 export const CasaBanner = styled.div`
   ${glassPanelElevated}
   display: flex;

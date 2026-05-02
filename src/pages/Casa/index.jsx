@@ -13,6 +13,12 @@ import {
 } from '../../services/casa';
 import { buildCasaInviteUrl } from '../../utils/casaInvite';
 import {
+  getPaymentChecklistKey,
+  getPaymentChecklistMarks,
+  isPaymentEvent,
+  savePaymentChecklistMarks,
+} from '../../utils/pagamentosChecklist';
+import {
   PageWrapper, PageHeader, HeaderInfo, PageTitle, PageSubtitle, HeaderActions,
   TabBar, Tab, Card, CardHeader, CardTitle,
   ChartGrid, ChartHint, ChartPanel, PanelStack,
@@ -26,6 +32,10 @@ import {
   MemberMovementGroup, MemberMovementHeader, MemberMovementTitle, MemberMovementStats,
   MovementList, MovementItem, MovementMain, MovementTitle, MovementMeta,
   MovementBadges, MovementBadge, MovementValue,
+  CasaCalendarLayout, CasaCalendarCard, CasaCalendarGrid, CasaCalendarWeekday,
+  CasaCalendarDay, CasaCalendarDayNumber, CasaCalendarEvent, CasaDayDetails,
+  CasaChecklistCard, ChecklistList, ChecklistItem, ChecklistCheck, ChecklistInfo,
+  ChecklistTitle, ChecklistMeta, ChecklistValue, ChecklistStatus, ChecklistSummary,
   CasaBanner, CasaIconBig, CasaInfoText, CasaNome, CasaMeta,
   NoCasaWrapper, NoCasaIcon, NoCasaTitle, NoCasaDesc, NoCasaActions,
   EmptyState, EmptyIcon, EmptyTitle, EmptyDesc,
@@ -174,19 +184,24 @@ const SkeletonCard = ({ rows = 3 }) => (
 const TABS = [
   { key: 'painel',  label: 'Painel' },
   { key: 'lancamentos', label: 'Lancamentos' },
+  { key: 'calendario', label: 'Calendario' },
   { key: 'membros', label: 'Membros' },
   { key: 'metas',   label: 'Metas' },
 ];
 
+const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sab'];
+
 /* ── componente principal ────────────────────────────────────── */
-export default function Casa() {
+export default function Casa({ initialTab = 'painel' }) {
   const auth     = useSelector((s) => s.auth);
   const userId   = auth?.user?.id;
   const theme = useTheme();
   const userName = auth?.user?.nome?.split(' ')[0] ?? 'você';
 
   /* estado global */
-  const [activeTab, setActiveTab] = useState('painel');
+  const [activeTab, setActiveTab] = useState(
+    TABS.some((tab) => tab.key === initialTab) ? initialTab : 'painel'
+  );
 
   /* dados */
   const [casa,      setCasa]      = useState(null);
@@ -229,6 +244,8 @@ export default function Casa() {
   const [nomeCasa,    setNomeCasa]    = useState('');
   const [emailConvite,setEmailConvite]= useState('');
   const [metaForm,    setMetaForm]    = useState({ descricao: '', valor_meta: '', valor_acumulado: '', prazo: '' });
+  const [pagamentosMarcados, setPagamentosMarcados] = useState(() => getPaymentChecklistMarks());
+  const [diaSelecionado, setDiaSelecionado] = useState('');
 
   /* ── carregamento de dados ─────────────────────────────────── */
   const loadCasa = useCallback(async () => {
@@ -293,11 +310,29 @@ export default function Casa() {
   }, [loadCasa]);
 
   useEffect(() => {
+    setActiveTab(TABS.some((tab) => tab.key === initialTab) ? initialTab : 'painel');
+  }, [initialTab]);
+
+  useEffect(() => {
     if (!casa) return;
     loadDashboard();
     loadLancamentos();
     loadMetas();
   }, [casa, loadDashboard, loadLancamentos, loadMetas]);
+
+  useEffect(() => {
+    setDiaSelecionado('');
+  }, [periodoLancamentos]);
+
+  useEffect(() => {
+    if (!casa?.id) return;
+    setPagamentosMarcados(getPaymentChecklistMarks());
+  }, [casa?.id]);
+
+  useEffect(() => {
+    if (!casa?.id) return;
+    savePaymentChecklistMarks(pagamentosMarcados);
+  }, [casa?.id, pagamentosMarcados]);
 
   /* ── ações de Casa ─────────────────────────────────────────── */
   const handleCriarCasa = useCallback(async () => {
@@ -469,6 +504,78 @@ export default function Casa() {
     ).slice(0, 8);
   }, [dashboard]);
 
+  const lancamentosCalendario = useMemo(() => (
+    arr(lancamentosCasa?.por_membro).flatMap((grupo) =>
+      arr(grupo.lancamentos).map((item) => ({
+        ...item,
+        membro: grupo.membro,
+        key: getPaymentChecklistKey(item),
+      }))
+    )
+  ), [lancamentosCasa]);
+
+  const agendaCalendario = useMemo(() => (
+    agenda.map((item) => ({
+      ...item,
+      tipo: item.tipo || 'gasto',
+      origem: item.origem || 'agenda',
+      key: getPaymentChecklistKey({ ...item, tipo: item.tipo || 'gasto', origem: item.origem || 'agenda' }),
+    }))
+  ), [agenda]);
+
+  const eventosCalendario = useMemo(() => {
+    const base = lancamentosCalendario.length > 0 ? lancamentosCalendario : agendaCalendario;
+    return base
+      .filter((item) => item.data)
+      .sort((a, b) => String(a.data).localeCompare(String(b.data)));
+  }, [agendaCalendario, lancamentosCalendario]);
+
+  const pagamentosChecklist = useMemo(() => (
+    eventosCalendario
+      .filter(isPaymentEvent)
+      .sort((a, b) => String(a.data).localeCompare(String(b.data)))
+  ), [eventosCalendario]);
+
+  const checklistResumo = useMemo(() => {
+    const total = pagamentosChecklist.length;
+    const pagos = pagamentosChecklist.filter((item) => pagamentosMarcados[item.key]).length;
+    return { total, pagos, pendentes: total - pagos };
+  }, [pagamentosChecklist, pagamentosMarcados]);
+
+  const calendarCells = useMemo(() => {
+    const firstDay = new Date(periodoLancamentos.ano, periodoLancamentos.mes - 1, 1).getDay();
+    const daysInMonth = new Date(periodoLancamentos.ano, periodoLancamentos.mes, 0).getDate();
+    return [
+      ...Array.from({ length: firstDay }, () => null),
+      ...Array.from({ length: daysInMonth }, (_, i) => i + 1),
+    ];
+  }, [periodoLancamentos]);
+
+  const eventosPorData = useMemo(() => {
+    const mapa = {};
+    eventosCalendario.forEach((item) => {
+      if (!item.data) return;
+      mapa[item.data] = [...(mapa[item.data] || []), item];
+    });
+    return mapa;
+  }, [eventosCalendario]);
+
+  const hojeKey = useMemo(() => {
+    const hoje = new Date();
+    return `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(hoje.getDate()).padStart(2, '0')}`;
+  }, []);
+
+  const selectedCalendarDate = useMemo(() => {
+    if (diaSelecionado) return diaSelecionado;
+    const diaComEvento = eventosCalendario.find((item) => {
+      const data = new Date(`${item.data}T00:00:00`);
+      return data.getMonth() + 1 === periodoLancamentos.mes && data.getFullYear() === periodoLancamentos.ano;
+    })?.data;
+    return diaComEvento || hojeKey;
+  }, [diaSelecionado, eventosCalendario, hojeKey, periodoLancamentos]);
+
+  const eventosSelecionados = eventosPorData[selectedCalendarDate] || [];
+
   const historicoCasa = useMemo(() => (
     arr(graficos.historico_6_meses).map((item) => {
       const ganhos = num(item.ganhos ?? item.ganhos_eventuais);
@@ -535,6 +642,13 @@ export default function Casa() {
       const data = new Date(atual.ano, atual.mes - 1 + delta, 1);
       return { mes: data.getMonth() + 1, ano: data.getFullYear() };
     });
+  }, []);
+
+  const handleTogglePagamento = useCallback((key) => {
+    setPagamentosMarcados((atual) => ({
+      ...atual,
+      [key]: !atual[key],
+    }));
   }, []);
 
   /* limpa feedback após 3s */
@@ -875,6 +989,149 @@ export default function Casa() {
     );
   };
 
+  const renderCalendario = () => (
+    <CasaCalendarLayout>
+      <CasaCalendarCard>
+        <CardHeader>
+          <div>
+            <CardTitle>Calendario de pagamentos e recebimentos</CardTitle>
+            <ChartHint>Visualize vencimentos e entradas do mes selecionado</ChartHint>
+          </div>
+          {loadingLancamentos && <SpinnerIcon />}
+        </CardHeader>
+
+        <MovementToolbar>
+          <SecondaryBtn type="button" onClick={() => handlePeriodoDelta(-1)}>
+            Mes anterior
+          </SecondaryBtn>
+          <MonthControl>{periodoLabel}</MonthControl>
+          <SecondaryBtn type="button" onClick={() => handlePeriodoDelta(1)}>
+            Proximo mes
+          </SecondaryBtn>
+        </MovementToolbar>
+
+        <CasaCalendarGrid $header>
+          {DIAS_SEMANA.map((dia) => (
+            <CasaCalendarWeekday key={dia}>{dia}</CasaCalendarWeekday>
+          ))}
+        </CasaCalendarGrid>
+        <CasaCalendarGrid>
+          {loadingLancamentos
+            ? Array.from({ length: 35 }).map((_, i) => <SkeletonBlock key={i} h="84px" />)
+            : calendarCells.map((day, index) => {
+                if (!day) return <div key={`empty-${index}`} />;
+                const dateKey = `${periodoLancamentos.ano}-${String(periodoLancamentos.mes).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                const eventos = eventosPorData[dateKey] || [];
+                const isSelected = selectedCalendarDate === dateKey;
+                const isToday = hojeKey === dateKey;
+
+                return (
+                  <CasaCalendarDay
+                    key={dateKey}
+                    type="button"
+                    $selected={isSelected}
+                    $today={isToday}
+                    $hasEvents={eventos.length > 0}
+                    onClick={() => setDiaSelecionado(dateKey)}
+                  >
+                    <CasaCalendarDayNumber $today={isToday}>{day}</CasaCalendarDayNumber>
+                    {eventos.slice(0, 3).map((item) => (
+                      <CasaCalendarEvent key={item.key} type={item.tipo}>
+                        {item.descricao}
+                      </CasaCalendarEvent>
+                    ))}
+                    {eventos.length > 3 && (
+                      <CasaCalendarEvent as="span">+{eventos.length - 3} itens</CasaCalendarEvent>
+                    )}
+                  </CasaCalendarDay>
+                );
+              })}
+        </CasaCalendarGrid>
+
+        <CasaDayDetails>
+          <CardHeader>
+            <CardTitle>{formatDate(selectedCalendarDate)}</CardTitle>
+          </CardHeader>
+          {eventosSelecionados.length === 0 ? (
+            <EmptyDesc>Nenhum pagamento ou recebimento nesta data.</EmptyDesc>
+          ) : (
+            <MovementList>
+              {eventosSelecionados.map((item) => (
+                <MovementItem key={item.key}>
+                  <MovementMain>
+                    <MovementTitle>{item.descricao}</MovementTitle>
+                    <MovementMeta>
+                      {item.categoria || 'Sem categoria'}
+                      {item.membro?.nome ? ` · ${item.membro.nome}` : ''}
+                    </MovementMeta>
+                    <MovementBadges>
+                      <MovementBadge type={item.tipo}>{item.tipo === 'ganho' ? 'Recebimento' : 'Pagamento'}</MovementBadge>
+                      <MovementBadge>{item.origem === 'fixo' ? 'Fixo' : item.origem === 'agenda' ? 'Agenda' : 'Eventual'}</MovementBadge>
+                    </MovementBadges>
+                  </MovementMain>
+                  <MovementValue type={item.tipo}>
+                    {item.tipo === 'gasto' ? '-' : '+'}{formatBRL(item.valor)}
+                  </MovementValue>
+                </MovementItem>
+              ))}
+            </MovementList>
+          )}
+        </CasaDayDetails>
+      </CasaCalendarCard>
+
+      <CasaChecklistCard>
+        <CardHeader>
+          <div>
+            <CardTitle>Checklist de pagamentos</CardTitle>
+            <ChartHint>Marque as contas ja pagas neste mes</ChartHint>
+          </div>
+        </CardHeader>
+
+        <ChecklistSummary>
+          <span><strong>{checklistResumo.pagos}</strong> pagos</span>
+          <span><strong>{checklistResumo.pendentes}</strong> pendentes</span>
+        </ChecklistSummary>
+
+        {loadingLancamentos ? (
+          <SkeletonCard rows={5} />
+        ) : pagamentosChecklist.length === 0 ? (
+          <EmptyState>
+            <EmptyIcon><Icon name="calendar" size={36} /></EmptyIcon>
+            <EmptyTitle>Nenhum pagamento no periodo</EmptyTitle>
+            <EmptyDesc>As contas da Casa aparecem aqui quando houver gastos com data.</EmptyDesc>
+          </EmptyState>
+        ) : (
+          <ChecklistList>
+            {pagamentosChecklist.map((item) => {
+              const checked = !!pagamentosMarcados[item.key];
+              return (
+                <ChecklistItem key={item.key} $checked={checked}>
+                  <ChecklistCheck>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => handleTogglePagamento(item.key)}
+                      aria-label={`Marcar ${item.descricao} como pago`}
+                    />
+                  </ChecklistCheck>
+                  <ChecklistInfo>
+                    <ChecklistTitle>{item.descricao}</ChecklistTitle>
+                    <ChecklistMeta>
+                      {formatDate(item.data)} · {item.categoria || 'Sem categoria'}
+                      {item.membro?.nome ? ` · ${item.membro.nome}` : ''}
+                    </ChecklistMeta>
+                  </ChecklistInfo>
+                  <ChecklistValue>{formatBRL(item.valor)}</ChecklistValue>
+                  <ChecklistStatus $checked={checked}>{checked ? 'Pago' : 'Pendente'}</ChecklistStatus>
+                </ChecklistItem>
+              );
+            })}
+          </ChecklistList>
+        )}
+      </CasaChecklistCard>
+    </CasaCalendarLayout>
+  );
+
   const renderMembros = () => (
     <FullWidthCard as="div">
       <Card>
@@ -1069,6 +1326,7 @@ export default function Casa() {
 
           {activeTab === 'painel'       && renderPainel()}
           {activeTab === 'lancamentos' && renderLancamentos()}
+          {activeTab === 'calendario'  && renderCalendario()}
           {activeTab === 'membros'      && renderMembros()}
           {activeTab === 'metas'        && renderMetas()}
         </>

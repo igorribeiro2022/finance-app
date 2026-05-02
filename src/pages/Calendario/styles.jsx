@@ -547,6 +547,145 @@ export const DetailItemValue = styled.div`
 
 // ── Utilitários ──────────────────────────────────────────────────────────────
 
+export const ChecklistPanel = styled.div`
+  ${glassPanelElevated}
+  margin-top: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: ${({ theme }) => theme.radius.lg};
+`;
+
+export const ChecklistHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+`;
+
+export const ChecklistTitle = styled.h2`
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 1rem;
+  font-weight: 800;
+`;
+
+export const ChecklistSubtitle = styled.p`
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.78rem;
+  margin-top: 0.15rem;
+`;
+
+export const ChecklistSummary = styled.div`
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+
+  span {
+    border: 1px solid ${({ theme }) => theme.colors.border};
+    border-radius: ${({ theme }) => theme.radius.md};
+    color: ${({ theme }) => theme.colors.textMuted};
+    font-size: 0.72rem;
+    min-width: 88px;
+    padding: 0.45rem 0.65rem;
+  }
+
+  strong {
+    color: ${({ theme }) => theme.colors.text};
+    display: block;
+    font-size: 1rem;
+    font-variant-numeric: tabular-nums;
+  }
+`;
+
+export const ChecklistList = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+`;
+
+export const ChecklistItem = styled.label`
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: ${({ theme }) => theme.radius.md};
+  background: ${({ theme }) => theme.colors.surface};
+  border: 1px solid ${({ theme }) => theme.colors.border};
+  opacity: ${({ $checked }) => $checked ? 0.72 : 1};
+
+  @media (max-width: 600px) {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: flex-start;
+  }
+`;
+
+export const ChecklistCheck = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 22px;
+  width: 22px;
+
+  input {
+    width: 18px;
+    height: 18px;
+    accent-color: ${({ theme }) => theme.colors.success};
+    cursor: pointer;
+  }
+`;
+
+export const ChecklistInfo = styled.span`
+  min-width: 0;
+`;
+
+export const ChecklistItemTitle = styled.span`
+  color: ${({ theme }) => theme.colors.text};
+  display: block;
+  font-size: 0.88rem;
+  font-weight: 800;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const ChecklistMeta = styled.span`
+  color: ${({ theme }) => theme.colors.textMuted};
+  display: block;
+  font-size: 0.72rem;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const ChecklistValue = styled.span`
+  color: ${({ theme }) => theme.colors.error};
+  font-size: 0.88rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+
+  @media (max-width: 600px) {
+    grid-column: 2;
+  }
+`;
+
+export const ChecklistStatus = styled.span`
+  background: ${({ theme, $checked }) => $checked ? `${theme.colors.success}18` : `${theme.colors.warning}18`};
+  border-radius: ${({ theme }) => theme.radius.full};
+  color: ${({ theme, $checked }) => $checked ? theme.colors.success : theme.colors.warning};
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 0.18rem 0.5rem;
+  white-space: nowrap;
+
+  @media (max-width: 600px) {
+    grid-column: 2;
+    width: fit-content;
+  }
+`;
+
 export const EmptyState = styled.div`
   display: flex;
   align-items: center;

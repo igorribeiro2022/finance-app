@@ -2,6 +2,12 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getCalendario } from '../../services/calendario';
 import {
+  getPaymentChecklistKey,
+  getPaymentChecklistMarks,
+  isPaymentEvent,
+  savePaymentChecklistMarks,
+} from '../../utils/pagamentosChecklist';
+import {
   Wrapper, TopBar, ViewTabs, ViewTab, NavGroup, NavButton, PeriodLabel,
   FilterBar, FilterChip,
   CalendarGrid, DayHeader, DayCell, DayNumber, DayEmpty,
@@ -14,6 +20,9 @@ import {
   DetailItemDesc, DetailItemMeta, DetailItemValue,
   EmptyState, SkeletonCell, ErrorBanner,
   Legend, LegendItem, LegendDot,
+  ChecklistPanel, ChecklistHeader, ChecklistTitle, ChecklistSubtitle,
+  ChecklistSummary, ChecklistList, ChecklistItem, ChecklistCheck,
+  ChecklistInfo, ChecklistItemTitle, ChecklistMeta, ChecklistValue, ChecklistStatus,
   PageTitle,
 } from './styles.jsx';
 
@@ -64,6 +73,7 @@ export default function Calendario() {
   const [error, setError]       = useState('');
   const [selectedDay, setSelectedDay] = useState(null);
   const [filter, setFilter]     = useState('all'); // all | income | expense
+  const [pagamentosMarcados, setPagamentosMarcados] = useState(() => getPaymentChecklistMarks());
 
   const load = useCallback(async (m, a) => {
     try {
@@ -84,6 +94,14 @@ export default function Calendario() {
 
   // Carregar mês atual
   useEffect(() => { load(mes, ano); }, [load, mes, ano]);
+
+  useEffect(() => {
+    setPagamentosMarcados(getPaymentChecklistMarks());
+  }, [mes, ano]);
+
+  useEffect(() => {
+    savePaymentChecklistMarks(pagamentosMarcados);
+  }, [pagamentosMarcados]);
 
   // Carregar meses adjacentes na visão ano
   useEffect(() => {
@@ -190,6 +208,28 @@ export default function Calendario() {
     const [sy, sm, sd] = selectedDay.split('-').map(Number);
     return getEventsForDate(sy, sm, sd);
   }, [selectedDay, getEventsForDate]);
+
+  const pagamentosChecklist = useMemo(() => {
+    const map = eventosMap[`${ano}-${mes}`] || {};
+    return Object.entries(map)
+      .flatMap(([data, itens]) => (Array.isArray(itens) ? itens : [itens]).map((item) => ({ ...item, data: item.data || data })))
+      .filter(isPaymentEvent)
+      .map((item) => ({ ...item, checklistKey: getPaymentChecklistKey(item) }))
+      .sort((a, b) => String(a.data).localeCompare(String(b.data)));
+  }, [ano, eventosMap, mes]);
+
+  const checklistResumo = useMemo(() => {
+    const total = pagamentosChecklist.length;
+    const pagos = pagamentosChecklist.filter((item) => pagamentosMarcados[item.checklistKey]).length;
+    return { total, pagos, pendentes: total - pagos };
+  }, [pagamentosChecklist, pagamentosMarcados]);
+
+  const togglePagamento = useCallback((key) => {
+    setPagamentosMarcados((atual) => ({
+      ...atual,
+      [key]: !atual[key],
+    }));
+  }, []);
 
   return (
     <Wrapper>
@@ -422,6 +462,52 @@ export default function Calendario() {
           </DetailPanel>
         )}
       </AnimatePresence>
+
+      <ChecklistPanel>
+        <ChecklistHeader>
+          <div>
+            <ChecklistTitle>Checklist de pagamentos</ChecklistTitle>
+            <ChecklistSubtitle>Suas contas do periodo selecionado</ChecklistSubtitle>
+          </div>
+          <ChecklistSummary>
+            <span><strong>{checklistResumo.pagos}</strong> pagos</span>
+            <span><strong>{checklistResumo.pendentes}</strong> pendentes</span>
+          </ChecklistSummary>
+        </ChecklistHeader>
+
+        {loading ? (
+          <SkeletonCell style={{ minHeight: 120 }} />
+        ) : pagamentosChecklist.length === 0 ? (
+          <EmptyState>Nenhum pagamento para este periodo.</EmptyState>
+        ) : (
+          <ChecklistList>
+            {pagamentosChecklist.map((item) => {
+              const checked = !!pagamentosMarcados[item.checklistKey];
+              return (
+                <ChecklistItem key={item.checklistKey} $checked={checked}>
+                  <ChecklistCheck>
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={() => togglePagamento(item.checklistKey)}
+                      aria-label={`Marcar ${item.descricao} como pago`}
+                    />
+                  </ChecklistCheck>
+                  <ChecklistInfo>
+                    <ChecklistItemTitle>{item.descricao}</ChecklistItemTitle>
+                    <ChecklistMeta>
+                      {item.data ? new Date(`${item.data}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : 'Sem data'}
+                      {item.categoria ? ` · ${item.categoria}` : ''}
+                    </ChecklistMeta>
+                  </ChecklistInfo>
+                  <ChecklistValue>{fmt(item.valor)}</ChecklistValue>
+                  <ChecklistStatus $checked={checked}>{checked ? 'Pago' : 'Pendente'}</ChecklistStatus>
+                </ChecklistItem>
+              );
+            })}
+          </ChecklistList>
+        )}
+      </ChecklistPanel>
     </Wrapper>
   );
 }

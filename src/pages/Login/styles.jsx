@@ -95,6 +95,99 @@ export const Form = styled.form`
   gap: 1.25rem;
 `;
 
+export const ActionStack = styled.div`
+  display: grid;
+  gap: 0.75rem;
+`;
+
+export const SocialButton = styled.button`
+  width: 100%;
+  min-height: 48px;
+  border-radius: ${({ theme }) => theme.radius.md};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  background: ${({ theme }) => theme.colors.surface};
+  color: ${({ theme }) => theme.colors.text};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+  font-size: 0.92rem;
+  font-weight: 750;
+  transition: ${({ theme }) => theme.transition};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.surfaceOffset};
+    border-color: ${({ theme }) => theme.colors.primaryBorder};
+    color: ${({ theme }) => theme.colors.primary};
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+`;
+
+export const SecondaryButton = styled.button`
+  width: 100%;
+  min-height: 48px;
+  border-radius: ${({ theme }) => theme.radius.md};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  background: ${({ theme }) => theme.colors.surfaceOffset};
+  color: ${({ theme }) => theme.colors.text};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.92rem;
+  font-weight: 750;
+  transition: ${({ theme }) => theme.transition};
+
+  &:hover {
+    background: ${({ theme }) => theme.colors.primaryHighlight};
+    border-color: ${({ theme }) => theme.colors.primaryBorder};
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+export const Divider = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  &::before,
+  &::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: ${({ theme }) => theme.colors.glassBorder};
+  }
+`;
+
+export const InlineActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+
+  a,
+  button {
+    color: ${({ theme }) => theme.colors.primary};
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  a:hover,
+  button:hover {
+    color: ${({ theme }) => theme.colors.primaryHover};
+  }
+`;
+
 export const FormGroup = styled.div`
   display: flex;
   flex-direction: column;

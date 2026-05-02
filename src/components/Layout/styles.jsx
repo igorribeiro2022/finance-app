@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { NavLink } from 'react-router-dom';
 
 const SIDEBAR_WIDTH = '240px';
 
@@ -188,6 +189,11 @@ export const TopbarRight = styled.div`
   }
 `;
 
+export const AccountMenu = styled.div`
+  position: relative;
+  display: inline-flex;
+`;
+
 export const CollapseButton = styled.button`
   width: 36px;
   height: 36px;
@@ -307,11 +313,20 @@ export const UserMenu = styled.div`
   border: 1px solid ${({ theme }) => theme.colors.glassBorder};
   color: ${({ theme }) => theme.colors.text};
   text-decoration: none;
+  cursor: pointer;
   transition: ${({ theme }) => theme.transition};
 
   &:hover {
     background: ${({ theme }) => theme.colors.surfaceOffset};
   }
+`;
+
+export const UserMenuChevron = styled.span`
+  display: inline-flex;
+  align-items: center;
+  color: ${({ theme }) => theme.colors.textMuted};
+  transition: ${({ theme }) => theme.transition};
+  transform: rotate(${({ $open }) => ($open ? '180deg' : '0deg')});
 `;
 
 export const UserAvatar = styled.span`
@@ -338,6 +353,101 @@ export const UserName = styled.span`
   font-size: 0.875rem;
   font-weight: 600;
   color: ${({ theme }) => theme.colors.text};
+`;
+
+export const AccountDropdown = styled.div`
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.6rem);
+  width: min(290px, calc(100vw - 2rem));
+  padding: 0.55rem;
+  border-radius: 18px;
+  background: ${({ theme }) => theme.colors.glassBgElevated};
+  border: 1px solid ${({ theme }) => theme.colors.glassBorder};
+  box-shadow: ${({ theme }) => theme.colors.glassShadow};
+  backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  -webkit-backdrop-filter: ${({ theme }) => theme.colors.glassBackdrop};
+  z-index: 90;
+`;
+
+export const AccountMenuHeader = styled.div`
+  padding: 0.8rem 0.85rem 0.7rem;
+`;
+
+export const AccountMenuTitle = styled.div`
+  color: ${({ theme }) => theme.colors.text};
+  font-size: 0.82rem;
+  font-weight: 900;
+`;
+
+export const AccountMenuHint = styled.div`
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.74rem;
+  margin-top: 0.15rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`;
+
+export const AccountMenuDivider = styled.div`
+  height: 1px;
+  margin: 0.35rem 0.25rem;
+  background: ${({ theme }) => theme.colors.glassBorder};
+`;
+
+export const AccountMenuItem = styled(NavLink)`
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.72rem 0.85rem;
+  border-radius: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.86rem;
+  font-weight: 750;
+  text-decoration: none;
+  transition: ${({ theme }) => theme.transition};
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+  }
+
+  &:hover,
+  &.active {
+    background: ${({ theme }) => theme.colors.primaryHighlight};
+    color: ${({ theme }) => theme.colors.primary};
+  }
+`;
+
+export const AccountLogoutButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  width: 100%;
+  padding: 0.72rem 0.85rem;
+  border-radius: 12px;
+  color: ${({ theme }) => theme.colors.textMuted};
+  font-size: 0.86rem;
+  font-weight: 750;
+  transition: ${({ theme }) => theme.transition};
+
+  .icon {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  &:hover {
+    background-color: rgba(217, 7, 7, 0.08);
+    color: ${({ theme }) => theme.colors.error};
+  }
 `;
 
 export const PageContent = styled.main`

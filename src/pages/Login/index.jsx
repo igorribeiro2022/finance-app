@@ -6,7 +6,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { setCredentials } from '../../store/authSlice';
-import api from '../../services/api';
+import { getOAuthLoginUrl, loginWithEmail } from '../../services/auth';
 import { postAceitarConviteComAccess } from '../../services/casa';
 import {
   clearCasaInviteToken,
@@ -14,24 +14,42 @@ import {
   saveCasaInviteToken,
 } from '../../utils/casaInvite';
 import {
-  Container, LeftPanel, RightPanel,
-  Logo, Title, Subtitle,
-  Form, FormGroup, Label, Input,
-  ErrorMessage, SubmitButton, FooterText,
-  Spinner, BrandMark, PasswordWrapper, TogglePassword,
+  ActionStack,
+  BrandMark,
+  Container,
+  Divider,
+  ErrorMessage,
+  FooterText,
+  Form,
+  FormGroup,
+  InlineActions,
+  Input,
+  Label,
+  LeftPanel,
+  Logo,
+  PasswordWrapper,
+  RightPanel,
+  SecondaryButton,
+  SocialButton,
+  Spinner,
+  SubmitButton,
+  Subtitle,
+  Title,
+  TogglePassword,
 } from './styles';
 
 const schema = yup.object({
-  email: yup.string().email('E-mail inválido').required('E-mail obrigatório'),
-  password: yup.string().min(6, 'Mínimo 6 caracteres').required('Senha obrigatória'),
+  email: yup.string().email('E-mail invalido').required('E-mail obrigatorio'),
+  password: yup.string().min(6, 'Minimo 6 caracteres').required('Senha obrigatoria'),
 });
 
 export default function Login() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [apiError, setApiError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const mode = searchParams.get('modo');
   const conviteToken = useMemo(() => getCasaInviteToken(searchParams), [searchParams]);
 
   useEffect(() => {
@@ -44,10 +62,20 @@ export default function Login() {
     formState: { errors, isSubmitting },
   } = useForm({ resolver: yupResolver(schema) });
 
+  const openEmailLogin = () => {
+    const params = { modo: 'email' };
+    if (conviteToken) params.convite = conviteToken;
+    setSearchParams(params);
+  };
+
+  const startOAuth = (provider) => {
+    window.location.href = getOAuthLoginUrl(provider);
+  };
+
   const onSubmit = async (data) => {
     setApiError('');
     try {
-      const response = await api.post('/auth/login/', data);
+      const response = await loginWithEmail(data);
       if (conviteToken) {
         try {
           await postAceitarConviteComAccess(conviteToken, response.data.access);
@@ -65,13 +93,107 @@ export default function Login() {
       navigate('/');
     } catch (err) {
       if (!err.response) {
-        setApiError('Não foi possível conectar ao servidor. Tente novamente em instantes.');
+        setApiError('Nao foi possivel conectar ao servidor. Tente novamente em instantes.');
         return;
       }
 
       setApiError(err.response?.data?.detail || 'E-mail ou senha incorretos.');
     }
   };
+
+  const renderWelcome = () => (
+    <>
+      <div>
+        <Title>Bem-vindo ao Finance</Title>
+        <Subtitle>Organize sua vida financeira sozinho ou junto com sua casa.</Subtitle>
+      </div>
+
+      <ActionStack>
+        <SocialButton type="button" onClick={() => startOAuth('google')}>
+          Continuar com Google
+        </SocialButton>
+        <SocialButton type="button" onClick={() => startOAuth('apple')}>
+          Continuar com Apple
+        </SocialButton>
+
+        <Divider>ou</Divider>
+
+        <SubmitButton
+          as={Link}
+          to={conviteToken ? `/cadastro?convite=${encodeURIComponent(conviteToken)}` : '/cadastro'}
+        >
+          Criar conta com e-mail
+        </SubmitButton>
+        <SecondaryButton type="button" onClick={openEmailLogin}>
+          Entrar na minha conta
+        </SecondaryButton>
+      </ActionStack>
+    </>
+  );
+
+  const renderEmailLogin = () => (
+    <>
+      <div>
+        <Title>Entrar na minha conta</Title>
+        <Subtitle>Acesse com e-mail e senha para continuar no Finance.</Subtitle>
+      </div>
+
+      <Form onSubmit={handleSubmit(onSubmit)}>
+        <FormGroup>
+          <Label>E-mail</Label>
+          <Input
+            type="email"
+            placeholder="seu@email.com"
+            autoComplete="email"
+            $hasError={!!errors.email}
+            {...register('email')}
+          />
+          {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
+        </FormGroup>
+
+        <FormGroup>
+          <Label>Senha</Label>
+          <PasswordWrapper>
+            <Input
+              type={showPassword ? 'text' : 'password'}
+              placeholder="Digite sua senha"
+              autoComplete="current-password"
+              $hasError={!!errors.password}
+              {...register('password')}
+            />
+            <TogglePassword
+              type="button"
+              onClick={() => setShowPassword((value) => !value)}
+              aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+            >
+              {showPassword ? 'Ocultar' : 'Mostrar'}
+            </TogglePassword>
+          </PasswordWrapper>
+          {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
+        </FormGroup>
+
+        <InlineActions>
+          <Link to="/recuperar-senha">Esqueci minha senha</Link>
+          <button type="button" onClick={() => setSearchParams(conviteToken ? { convite: conviteToken } : {})}>
+            Voltar
+          </button>
+        </InlineActions>
+
+        {apiError && <ErrorMessage $center>{apiError}</ErrorMessage>}
+
+        <SubmitButton type="submit" disabled={isSubmitting}>
+          {isSubmitting ? <Spinner /> : 'Entrar'}
+        </SubmitButton>
+      </Form>
+
+      <FooterText>
+        Nao tem uma conta?{' '}
+        <Link to={conviteToken ? `/cadastro?convite=${encodeURIComponent(conviteToken)}` : '/cadastro'}>
+          Criar conta
+        </Link>
+      </FooterText>
+    </>
+  );
 
   return (
     <Container>
@@ -90,67 +212,7 @@ export default function Login() {
           <span>Finance</span>
         </BrandMark>
 
-        <div>
-          <Title>Bem-vindo de volta</Title>
-          <Subtitle>Acesse sua conta para continuar gerenciando suas finanças.</Subtitle>
-        </div>
-
-        <Form onSubmit={handleSubmit(onSubmit)}>
-          <FormGroup>
-            <Label>E-mail</Label>
-            <Input
-              type="email"
-              placeholder="seu@email.com"
-              $hasError={!!errors.email}
-              {...register('email')}
-            />
-            {errors.email && <ErrorMessage>{errors.email.message}</ErrorMessage>}
-          </FormGroup>
-
-          <FormGroup>
-            <Label>Senha</Label>
-            <PasswordWrapper>
-              <Input
-                type={showPassword ? 'text' : 'password'}
-                placeholder="••••••••"
-                $hasError={!!errors.password}
-                {...register('password')}
-              />
-              <TogglePassword
-                type="button"
-                onClick={() => setShowPassword((v) => !v)}
-                aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
-              >
-                {showPassword ? (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94"/>
-                    <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19"/>
-                    <line x1="1" y1="1" x2="23" y2="23"/>
-                  </svg>
-                ) : (
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                    <circle cx="12" cy="12" r="3"/>
-                  </svg>
-                )}
-              </TogglePassword>
-            </PasswordWrapper>
-            {errors.password && <ErrorMessage>{errors.password.message}</ErrorMessage>}
-          </FormGroup>
-
-          {apiError && <ErrorMessage $center>{apiError}</ErrorMessage>}
-
-          <SubmitButton type="submit" disabled={isSubmitting}>
-            {isSubmitting ? <Spinner /> : 'Entrar'}
-          </SubmitButton>
-        </Form>
-
-        <FooterText>
-          Não tem uma conta?{' '}
-          <Link to={conviteToken ? `/cadastro?convite=${encodeURIComponent(conviteToken)}` : '/cadastro'}>
-            Criar conta
-          </Link>
-        </FooterText>
+        {mode === 'email' ? renderEmailLogin() : renderWelcome()}
       </LeftPanel>
 
       <RightPanel
@@ -167,7 +229,7 @@ export default function Login() {
             <path d="M42 65 L78 65" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
           </svg>
           <Title $inverse>Finance</Title>
-          <Subtitle $inverse>Controle financeiro pessoal e familiar com inteligência.</Subtitle>
+          <Subtitle $inverse>Controle financeiro pessoal e familiar com inteligencia.</Subtitle>
         </Logo>
       </RightPanel>
     </Container>

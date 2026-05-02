@@ -13,6 +13,11 @@ import VistaBancaria from '../pages/VistaBancaria';
 import Casa from '../pages/Casa';
 import OpenFinance from '../pages/OpenFinance';
 import Perfil from '../pages/Perfil';
+import Seguranca from '../pages/Seguranca';
+import AuthCallback from '../pages/AuthCallback';
+import Onboarding from '../pages/Onboarding';
+import RecuperarSenha from '../pages/RecuperarSenha';
+import RedefinirSenha from '../pages/RedefinirSenha';
 import ConviteCasa from '../pages/ConviteCasa';
 import Login from '../pages/Login';
 import Cadastro from '../pages/Cadastro';
@@ -63,11 +68,34 @@ function AppRoutes() {
         }
       />
 
+      <Route
+        path="/recuperar-senha"
+        element={
+          <PublicOnlyRoute>
+            <RecuperarSenha />
+          </PublicOnlyRoute>
+        }
+      />
+
+      <Route
+        path="/redefinir-senha/:uid/:token"
+        element={
+          <PublicOnlyRoute>
+            <RedefinirSenha />
+          </PublicOnlyRoute>
+        }
+      />
+
+      <Route path="/auth/callback" element={<AuthCallback />} />
       <Route path="/convite-casa/:token" element={<ConviteCasa />} />
 
       <Route element={<PrivateLayout />}>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/onboarding" element={<Onboarding />} />
         <Route path="/categorias" element={<Navigate to="/perfil?secao=categorias" replace />} />
+        <Route path="/preferencias" element={<Navigate to="/perfil?secao=preferencias" replace />} />
+        <Route path="/seguranca" element={<Seguranca />} />
+        <Route path="/membros-casa" element={<Casa initialTab="membros" />} />
         <Route path="/gastos-fixos" element={<GastosFixos />} />
         <Route path="/ganhos-fixos" element={<GanhosFixos />} />
         <Route path="/eventuais" element={<Eventuais />} />
