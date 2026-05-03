@@ -138,8 +138,8 @@ export default function Layout({ children }) {
       <Sidebar $open={sidebarOpen}>
         <SidebarHeader>
           <BrandMark>
-            <span className="brand-chip">F</span>
-            Finance
+            <span className="brand-chip">P</span>
+            Petrus
           </BrandMark>
 
           <CollapseButton
@@ -212,7 +212,7 @@ export default function Layout({ children }) {
                 <AccountDropdown role="menu">
                   <AccountMenuHeader>
                     <AccountMenuTitle>Minha conta</AccountMenuTitle>
-                    <AccountMenuHint>{user?.email || 'Gerencie sua conta Finance'}</AccountMenuHint>
+                    <AccountMenuHint>{user?.email || 'Gerencie sua conta Petrus'}</AccountMenuHint>
                   </AccountMenuHeader>
 
                   <AccountMenuDivider />

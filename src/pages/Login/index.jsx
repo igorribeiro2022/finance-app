@@ -104,8 +104,8 @@ export default function Login() {
   const renderWelcome = () => (
     <>
       <div>
-        <Title>Bem-vindo ao Finance</Title>
-        <Subtitle>Organize sua vida financeira sozinho ou junto com sua casa.</Subtitle>
+        <Title>Bem-vindo ao Petrus</Title>
+        <Subtitle>Sua casa sobre a Rocha para organizar a vida financeira.</Subtitle>
       </div>
 
       <ActionStack>
@@ -135,7 +135,7 @@ export default function Login() {
     <>
       <div>
         <Title>Entrar na minha conta</Title>
-        <Subtitle>Acesse com e-mail e senha para continuar no Finance.</Subtitle>
+        <Subtitle>Acesse com e-mail e senha para continuar no Petrus.</Subtitle>
       </div>
 
       <Form onSubmit={handleSubmit(onSubmit)}>
@@ -209,7 +209,7 @@ export default function Login() {
             <path d="M10 28 L20 12 L30 28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
             <path d="M14 22 L26 22" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
           </svg>
-          <span>Finance</span>
+          <span>Petrus</span>
         </BrandMark>
 
         {mode === 'email' ? renderEmailLogin() : renderWelcome()}
@@ -228,8 +228,8 @@ export default function Login() {
             <path d="M30 85 L60 35 L90 85" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
             <path d="M42 65 L78 65" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
           </svg>
-          <Title $inverse>Finance</Title>
-          <Subtitle $inverse>Controle financeiro pessoal e familiar com inteligencia.</Subtitle>
+          <Title $inverse>Petrus</Title>
+          <Subtitle $inverse>Sua casa sobre a Rocha.</Subtitle>
         </Logo>
       </RightPanel>
     </Container>

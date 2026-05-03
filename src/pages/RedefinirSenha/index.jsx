@@ -70,7 +70,7 @@ export default function RedefinirSenha() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
-        <BrandMark><span>Finance</span></BrandMark>
+        <BrandMark><span>Petrus</span></BrandMark>
         <div>
           <Title>Definir nova senha</Title>
           <Subtitle>Crie uma senha segura para recuperar o acesso a sua conta.</Subtitle>

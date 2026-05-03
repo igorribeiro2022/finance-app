@@ -120,12 +120,12 @@ export default function Cadastro() {
             <path d="M10 28 L20 12 L30 28" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
             <path d="M14 22 L26 22" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"/>
           </svg>
-          <span>Finance</span>
+          <span>Petrus</span>
         </BrandMark>
 
         <div>
           <Title>Criar conta com e-mail</Title>
-          <Subtitle>Comece agora a organizar suas financas de forma inteligente.</Subtitle>
+          <Subtitle>Comece agora a organizar sua casa financeira sobre a Rocha.</Subtitle>
         </div>
 
         {success ? (
@@ -245,8 +245,8 @@ export default function Cadastro() {
             <path d="M30 85 L60 35 L90 85" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
             <path d="M42 65 L78 65" stroke="currentColor" strokeWidth="3" strokeLinecap="round"/>
           </svg>
-          <Title $inverse>Finance</Title>
-          <Subtitle $inverse>Controle financeiro pessoal e familiar com inteligencia.</Subtitle>
+          <Title $inverse>Petrus</Title>
+          <Subtitle $inverse>Sua casa sobre a Rocha.</Subtitle>
         </Logo>
       </RightPanel>
     </Container>

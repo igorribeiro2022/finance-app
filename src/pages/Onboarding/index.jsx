@@ -19,7 +19,7 @@ export default function Onboarding() {
     <PageWrapper>
       <PageHeader>
         <div>
-          <PageTitle>Vamos preparar seu Finance</PageTitle>
+          <PageTitle>Vamos preparar seu Petrus</PageTitle>
           <PageSubtitle>
             Esta etapa inicial ajuda voce a configurar categorias, casa e conexoes bancarias no seu ritmo.
           </PageSubtitle>

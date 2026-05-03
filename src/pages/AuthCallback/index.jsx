@@ -75,7 +75,7 @@ export default function AuthCallback() {
     <Container>
       <LeftPanel>
         <BrandMark>
-          <span>Finance</span>
+          <span>Petrus</span>
         </BrandMark>
         <div>
           <Title>Concluindo acesso</Title>

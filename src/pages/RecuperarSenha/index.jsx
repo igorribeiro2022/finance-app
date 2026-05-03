@@ -58,7 +58,7 @@ export default function RecuperarSenha() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
-        <BrandMark><span>Finance</span></BrandMark>
+        <BrandMark><span>Petrus</span></BrandMark>
         <div>
           <Title>Recuperar senha</Title>
           <Subtitle>Informe seu e-mail para receber um link seguro de redefinicao.</Subtitle>
